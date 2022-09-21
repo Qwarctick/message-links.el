@@ -38,7 +38,7 @@ This mode allow the generation of the references in the text as follow:
 ## How to use
 
 - Download this repository into `~/.emacs.d`
-``` emacs-lisp
+``` elisp
 (load "~/.emacs.d/message-links.el/message-links.el")
 (require 'message-links-mode)
 (define-key message-mode-map (kbd "C-c l") 'message-links-add)
