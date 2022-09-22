@@ -10,6 +10,11 @@
   :type 'string
   :group 'message-links)
 
+(defcustom message-links-index-start
+  1
+  "Index of the first link inserted"
+  :type 'integer
+  :group 'message-links)
 
 (defun message-links-add-link (link)
   "Insert the link into the under the correct part of the message defined by `message-links-link-header'"
@@ -29,7 +34,7 @@
 (defun message-links-get-max-short-link ()
   "Get the maximum index after `message-links-link-header'.
 
-Return the maximum value. Return 0 otherwise."
+Return the maximum value. Return `message-links-index-start' minus 1 otherwise."
   (let ((short-links '()))
     (save-excursion
       (goto-char (point-min))
@@ -39,7 +44,7 @@ Return the maximum value. Return 0 otherwise."
               (push (string-to-number (match-string-no-properties 1)) short-links))
             (message "%s" short-links)
             (apply #'max short-links))
-        0))))
+        (1- message-links-index-start)))))
 
 (defalias 'message-links-add 'message-links-add-link)
 
