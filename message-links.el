@@ -26,7 +26,7 @@ Return the maximum value. Return 0 otherwise."
       (goto-char (point-min))
       (if (search-forward message-links-link-header nil t)  ; Move point at the end of the header link
           (progn
-            (while (search-forward-regexp "[\\([0-9]\\)]" nil t)
+            (while (search-forward-regexp "[\\([0-9]*\\)]" nil t)
               (push (string-to-number (match-string-no-properties 1)) short-links))
             (message "%s" short-links)
             (apply #'max short-links))
