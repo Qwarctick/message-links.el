@@ -61,3 +61,4 @@ Then press `C-c l` when composing a message to add a link.
 - `message-links-link-header` : Default = `\n\n---links---\n` : Header use to separate links and the original text
 - `message-links-enable-link-header`: Default = `t` : Use `message-links-link-header` to separate links and the original text. If set to `nil`, links will be added at the end of the buffer.
 - `message-links-index-start` : Default = `1` : Start index of links. So by default the first link will be `[1]`.
+- `message-links-separator` : Default = ` : ` : The separator to use between the link index and the link text.

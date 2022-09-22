@@ -22,6 +22,12 @@
   :type 'boolean
   :group 'message-links)
 
+(defcustom message-links-separator
+  " : "
+  "The text to place between the number and the link"
+  :type 'string
+  :group 'message-links)
+
 (defun message-links-add-link (link)
   "Insert the LINK under the text.
 The LINK will be added after the `message-links-link-header' if it is not
@@ -36,13 +42,16 @@ already present or added to the link list."
                 (progn ;; No message-links-link-header present in the message
                   (goto-char (point-max))
                   (insert message-links-link-header)
-                  (insert (concat "[" short-link-index "] : " link)))
+                  (insert (concat "[" short-link-index "]"
+                                  message-links-separator link)))
               (progn ;; Message found in the compose message
                 (goto-char (point-max))
-                (insert (concat "\n[" short-link-index "] : " link)))))
+                (insert (concat "\n[" short-link-index "]"
+                                message-links-separator link)))))
         (progn  ; Insert links without the link header
           (goto-char (point-max))
-          (insert (concat "\n[" short-link-index "] : " link)))))))
+          (insert (concat "\n[" short-link-index "]"
+                          message-links-separator link)))))))
 
 (defun message--links-get-max-short-link ()
   "Get the maximum index of the links in the buffer.
@@ -54,7 +63,10 @@ original text starts with '[0-9]*', this will be considered as a link"
   (let ((short-links '()))
     (save-excursion
       (goto-char (point-min))
-      (while (search-forward-regexp "^\\[\\([0-9]*\\)]" nil t)
+      (while (search-forward-regexp
+              (concat "^\\[\\([0-9]*\\)]"
+                      (regexp-quote message-links-separator))
+              nil t)
         (push (string-to-number (match-string-no-properties 1)) short-links)))
     (if short-links
       (apply #'max short-links)
