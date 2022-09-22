@@ -17,7 +17,9 @@
   :group 'message-links)
 
 (defun message-links-add-link (link)
-  "Insert the link into the under the correct part of the message defined by `message-links-link-header'"
+  "Insert the LINK under the text.
+The LINK will be added after the `message-links-link-header' if it is not
+already present or added to the link list."
   (interactive "sLink to insert: ")
   (save-excursion
     (let ((short-link-index (number-to-string (1+ (message-links-get-max-short-link)))))
@@ -33,12 +35,13 @@
 
 (defun message-links-get-max-short-link ()
   "Get the maximum index after `message-links-link-header'.
-
-Return the maximum value. Return `message-links-index-start' minus 1 otherwise."
+Return the maximum value if `message-links-link-header' can be found.
+Else, return `message-links-index-start' minus 1."
   (let ((short-links '()))
     (save-excursion
       (goto-char (point-min))
-      (if (search-forward message-links-link-header nil t)  ; Move point at the end of the header link
+      ; Move point at the end of the header link
+      (if (search-forward message-links-link-header nil t)
           (progn
             (while (search-forward-regexp "[\\([0-9]*\\)]" nil t)
               (push (string-to-number (match-string-no-properties 1)) short-links))
