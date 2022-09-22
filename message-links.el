@@ -1,6 +1,15 @@
 ;;; message-links.el -*- lexical-binding: t; -*-
 
-(defvar message-links-link-header "\n\n---links---\n")
+(defgroup message-links nil
+  "Manage reference links into text"
+  :group 'message)
+
+(defcustom message-links-link-header
+  "\n\n---links---\n"
+  "Header used to separate links from the original text"
+  :type 'string
+  :group 'message-links)
+
 
 (defun message-links-add-link (link)
   "Insert the link into the under the correct part of the message defined by `message-links-link-header'"
