@@ -16,6 +16,12 @@
   :type 'integer
   :group 'message-links)
 
+(defcustom message-links-enable-link-header
+  t
+  "Use the link header to separate original text from links"
+  :type 'boolean
+  :group 'message-links)
+
 (defun message-links-add-link (link)
   "Insert the LINK under the text.
 The LINK will be added after the `message-links-link-header' if it is not
