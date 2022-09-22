@@ -22,7 +22,7 @@ The LINK will be added after the `message-links-link-header' if it is not
 already present or added to the link list."
   (interactive "sLink to insert: ")
   (save-excursion
-    (let ((short-link-index (number-to-string (1+ (message-links-get-max-short-link)))))
+    (let ((short-link-index (number-to-string (1+ (message--links-get-max-short-link)))))
       (insert (concat "[" short-link-index "]"))
       (if (not (search-forward message-links-link-header nil t))
           (progn ;; No message-links-link-header present in the message
@@ -33,7 +33,7 @@ already present or added to the link list."
           (goto-char (point-max))
           (insert (concat "\n[" short-link-index "] : " link)))))))
 
-(defun message-links-get-max-short-link ()
+(defun message--links-get-max-short-link ()
   "Get the maximum index after `message-links-link-header'.
 Return the maximum value if `message-links-link-header' can be found.
 Else, return `message-links-index-start' minus 1."
@@ -51,11 +51,11 @@ Else, return `message-links-index-start' minus 1."
 
 (defalias 'message-links-add 'message-links-add-link)
 
-;;;autoload
+;;;###autoload
 (define-minor-mode message-links-mode
   "Toggle message-links-mode
 
-Call `message-links-add-link' to add a link into you message buffer.
+Call `message-links-add' to add a link into you message buffer.
 "
   :lighter " message-links")
 ;;;###autoload
