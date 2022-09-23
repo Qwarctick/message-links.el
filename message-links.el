@@ -1,24 +1,45 @@
-;;; message-links.el -*- lexical-binding: t; -*-
+;;; message-links.el --- Manage reference links in text -*- lexical-binding: t; -*-
+
+;; SPDX-License-Identifier: MIT
+;; Copyright (C) 2022 Philippe Noel
+
+;; Author: Philippe Noel <philippe.noel@loria.fr>
+
+;; URL: https://github.com/PhilippeNoel1/message-links.el
+;; Version: 0.1
+;; Package-Requires: ((emacs "26.1"))
+
+;;; Commentary:
+
+;; Manage reference links.
+;;
+
+;;; Usage
+
+;; TODO.
+
+;;; Code:
+
 
 (defgroup message-links nil
-  "Manage reference links into text"
+  "Manage reference links into text."
   :group 'message)
 
 (defcustom message-links-link-header
   "\n\n---links---\n"
-  "Header used to separate links from the original text"
+  "Header used to separate links from the original text."
   :type 'string
   :group 'message-links)
 
 (defcustom message-links-index-start
   1
-  "Index of the first link inserted"
+  "Index of the first link inserted."
   :type 'integer
   :group 'message-links)
 
 (defcustom message-links-enable-link-header
   t
-  "Use the link header to separate original text from links"
+  "Use the link header to separate original text from links."
   :type 'boolean
   :group 'message-links)
 
@@ -28,7 +49,7 @@ The LINK will be added after the `message-links-link-header' if it is not
 already present or added to the link list."
   (interactive "sLink to insert: ")
   (save-excursion
-    (let ((short-link-index (number-to-string (1+ (message--links-get-max-short-link)))))
+    (let ((short-link-index (number-to-string (1+ (message-links--get-max-short-link)))))
       (insert (concat "[" short-link-index "]"))
       (if message-links-enable-link-header
           (progn ; Insert link after the link header
@@ -44,7 +65,7 @@ already present or added to the link list."
           (goto-char (point-max))
           (insert (concat "\n[" short-link-index "] : " link)))))))
 
-(defun message--links-get-max-short-link ()
+(defun message-links--get-max-short-link ()
   "Get the maximum index of the links in the buffer.
 Return the maximum value if links can be found in the buffer.
 Else, return `message-links-index-start' minus 1.
@@ -64,11 +85,11 @@ original text starts with '[0-9]*', this will be considered as a link"
 
 ;;;###autoload
 (define-minor-mode message-links-mode
-  "Toggle message-links-mode
+  "Toggle `message-links-mode'.
 
-Call `message-links-add' to add a link into you message buffer.
-"
+Call `message-links-add' to add a link into you message buffer."
   :lighter " message-links")
 ;;;###autoload
 
-(provide 'message-links-mode)
+(provide 'message-links)
+;;; message-links.el ends here
