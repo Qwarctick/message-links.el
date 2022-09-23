@@ -22,10 +22,6 @@
   :type 'boolean
   :group 'message-links)
 
-(defcustom message-links-separator
-  " : "
-  "The text to place between the number and the link"
-  :type 'string
 (defcustom message-links-sep-footnotes-link
   '("[" . "] : ")
   "The text to use for links in the footnotes
@@ -46,42 +42,45 @@ The LINK will be added after the `message-links-link-header' if it is not
 already present or added to the link list."
   (interactive "sLink to insert: ")
   (save-excursion
-    (let ((short-link-index (number-to-string (1+ (message--links-get-max-short-link)))))
-      (insert (concat "[" short-link-index "]"))
+    (let ((short-link-index (number-to-string (1+ (message--links-get-max-footnote-link)))))
+      (insert (message-links--gen-text-link short-link-index))
       (if message-links-enable-link-header
           (progn ; Insert link after the link header
             (if (not (search-forward message-links-link-header nil t))
                 (progn ;; No message-links-link-header present in the message
                   (goto-char (point-max))
                   (insert message-links-link-header)
-                  (insert (concat "[" short-link-index "]"
-                                  message-links-separator link)))
+                  (insert (message-links--gen-footnotes-link short-link-index) link))
               (progn ;; Message found in the compose message
                 (goto-char (point-max))
-                (insert (concat "\n[" short-link-index "]"
-                                message-links-separator link)))))
+                (insert (concat "\n" (message-links--gen-footnotes-link short-link-index) link)))))
         (progn  ; Insert links without the link header
           (goto-char (point-max))
-          (insert (concat "\n[" short-link-index "]"
-                          message-links-separator link)))))))
+          (insert (concat "\n" (message-links--gen-footnotes-link short-link-index) link)))))))
 
-(defun message--links-get-max-short-link ()
-  "Get the maximum index of the links in the buffer.
+(defun message-links--extract-footnote-links ()
+  "Extract the footnotes links in the buffer.
+Return a list of string or nil"
+  (let ((footnote-links '()))
+  (save-excursion
+    (goto-char (point-min))
+    (save-match-data
+      (while (re-search-forward (message-links--footnote-link-regex) nil t)
+        (push (match-string-no-properties 0) footnote-links))))
+  footnote-links))
+
+(defun message--links-get-max-footnote-link ()
+  "Get the maximum index of the footnote links in the buffer.
 Return the maximum value if links can be found in the buffer.
-Else, return `message-links-index-start' minus 1.
-
-Be careful, due to the regex used to find links, if a line of the
-original text starts with '[0-9]*', this will be considered as a link"
-  (let ((short-links '()))
-    (save-excursion
-      (goto-char (point-min))
-      (while (search-forward-regexp
-              (concat "^\\[\\([0-9]*\\)]"
-                      (regexp-quote message-links-separator))
-              nil t)
-        (push (string-to-number (match-string-no-properties 1)) short-links)))
-    (if short-links
-      (apply #'max short-links)
+Else, return `message-links-index-start' minus 1."
+  (let* ((footnote-links (message-links--extract-footnote-links))
+        (footnotes-indexes (mapcar (lambda (x)
+                                     (save-match-data
+                                       (and (string-match "\\([0-9]+\\)" x)
+                                            (string-to-number (match-string 1 x)))))
+                                   footnote-links)))
+    (if footnotes-indexes
+      (apply #'max footnotes-indexes)
       (1- message-links-index-start))))
 
 (defun message-links--footnote-link-regex ()
