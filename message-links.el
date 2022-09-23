@@ -84,6 +84,28 @@ original text starts with '[0-9]*', this will be considered as a link"
       (apply #'max short-links)
       (1- message-links-index-start))))
 
+(defun message-links--footnote-link-regex ()
+  "Generate the regex used to extract the footnote links."
+  (concat
+   "^"
+   (regexp-quote (car message-links-sep-footnotes-link))
+   "[0-9]+"
+   (regexp-quote (cdr message-links-sep-footnotes-link))))
+
+(defun message-links--gen-footnotes-link (index)
+  "Generate the link to insert at the bottom (footnote) of the buffer"
+  (concat
+   (car message-links-sep-footnotes-link)
+   index
+   (cdr message-links-sep-footnotes-link)))
+
+(defun message-links--gen-text-link (index)
+  "Generate the link to insert in the text."
+  (concat
+   (car message-links-sep-text-link)
+   index
+   (cdr message-links-sep-text-link)))
+
 (defalias 'message-links-add 'message-links-add-link)
 
 ;;;###autoload
