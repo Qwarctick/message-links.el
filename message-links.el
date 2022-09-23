@@ -26,6 +26,18 @@
   " : "
   "The text to place between the number and the link"
   :type 'string
+(defcustom message-links-sep-footnotes-link
+  '("[" . "] : ")
+  "The text to use for links in the footnotes
+If the default is used, links in footnotes looks like '[1] : '"
+  :type 'alist
+  :group 'message-links)
+
+(defcustom message-links-sep-text-link
+  '("[" . "]")
+  "The text to use for number link in the text.
+If the default is used, links in text looks like '[1]'"
+  :type 'alist
   :group 'message-links)
 
 (defun message-links-add-link (link)
