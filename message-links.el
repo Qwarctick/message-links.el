@@ -142,13 +142,4 @@ Else, return `message-links-index-start' minus 1."
 
 (defalias 'message-links-add 'message-links-add-link)
 
-;;;###autoload
-(define-minor-mode message-links-mode
-  "Toggle `message-links-mode'.
-
-Call `message-links-add' to add a link into you message buffer."
-  :lighter " message-links")
-;;;###autoload
-
-(provide 'message-links)
 ;;; message-links.el ends here
