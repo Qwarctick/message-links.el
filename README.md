@@ -58,8 +58,7 @@ Then press `C-c l` when composing a message to add a link.
 
 ## customization
 
-- `message-links-link-header` : Default = `\n\n---links---\n` : Header use to separate links and the original text
-- `message-links-enable-link-header`: Default = `t` : Use `message-links-link-header` to separate links and the original text. If set to `nil`, links will be added at the end of the buffer.
+- `message-links-link-header` : Default = `\n\n---links---\n` : Header use to separate links and the original text. If set to `nil`, disable the header.
 - `message-links-index-start` : Default = `1` : Start index of links. So by default the first link will be `[1]`.
 - `message-links-sep-footnotes-link` : Default = `'("[" . "] : " ` : The text to use for links in the bottom of the buffer. Default, links look like `[1] : link text`. Customize with `(setq message-links-sep-footnotes-link '("{^" . "}: "))` and links in footnote will look like `{^1}: link text`
 - `message-links-sep-text-link` : Default = `'("[" . "]")` : The text to use for links in the text. Default, links look like `blablabla [1] blablabla`. Customize with `(setq message-links-sep-text-link '("{^" . "}"))` and links in text will look like `blablabla {^1} blablabla`

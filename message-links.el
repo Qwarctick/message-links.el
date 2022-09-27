@@ -27,7 +27,8 @@
 
 (defcustom message-links-link-header
   "\n\n---links---\n"
-  "Header used to separate links from the original text."
+  "Header used to separate links from the original text.
+If set to nil, no header will be used."
   :type 'string
   :group 'message-links)
 
@@ -39,7 +40,9 @@
 
 (defcustom message-links-enable-link-header
   t
-  "Use the link header to separate original text from links."
+  "OBSOLETE: use `message-links-link-header' instead.
+
+Use the link header to separate original text from links."
   :type 'boolean
   :group 'message-links)
 
@@ -68,8 +71,8 @@ already present or added to the link list."
       (insert (message-links--gen-text-link short-link-index))
 
       (cond
-       ;; Insert link after the link header.
-       (message-links-enable-link-header
+       ;; Insert link after the link header if used.
+       (message-links-link-header
         (cond
          ;; No message-links-link-header present in the message.
          ((not (search-forward message-links-link-header nil t))
