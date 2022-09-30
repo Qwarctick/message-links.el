@@ -60,15 +60,46 @@ If the default is used, links in text looks like '[1]'"
   :type 'alist
   :group 'message-links)
 
-(defun message-links-add-link (link)
-  "Insert the LINK under the text.
-The LINK will be added after the `message-links-link-header' if it is not
-already present or added to the link list."
-  (interactive "sLink to insert: ")
+(defcustom message-links-match-link-at-point-fn
+  'message-links-match-link-at-point-default
+  "Function that matches a link at the point."
+  :type 'function
+  :group 'message-links)
+
+(defcustom message-links-match-link-forward-fn
+  'message-links-match-link-forward-default
+  "Function that finds the next link, taking a single LIMIT argument."
+  :type 'function
+  :group 'message-links)
+
+;;; Implementations of link matching functions.
+
+(require 'thingatpt)
+
+(defun message-links-match-link-at-point-default ()
+  "Return the bounds of the link at point."
+  (bounds-of-thing-at-point 'url))
+
+(defun message-links-match-link-forward-default (limit)
+  "Return the bounds of the link before LIMIT, scanning forwards as needed."
+  (let ((bounds nil))
+    (save-excursion
+      (while (and (null bounds) (< (point) limit))
+        (unless (setq bounds (funcall message-links-match-link-at-point-fn))
+          ;; No match, skip over non-blank, then blank space to the next
+          ;; possible candidate for a URL.
+          (skip-chars-forward "^[:blank:]\n" limit)
+          (skip-chars-forward "[:blank:]\n" limit))))
+    bounds))
+
+(defun message-links--add-link-impl (link)
+  "Add LINK, returning the point where the link reference ends."
   (save-excursion
     (let ((short-link-index (number-to-string
-                             (1+ (message--links-get-max-footnote-link)))))
+                             (1+ (message--links-get-max-footnote-link))))
+          (pos-result nil))
       (insert (message-links--gen-text-link short-link-index))
+      (setq pos-result (point))
 
       (cond
        ;; Insert link after the link header if used.
@@ -90,7 +121,77 @@ already present or added to the link list."
         (goto-char (point-max))
         (insert (concat "\n"
                         (message-links--gen-footnotes-link short-link-index)
-                        link)))))))
+                        link))))
+      pos-result)))
+
+(defun message-links-add-link (link)
+  "Insert the LINK under the text.
+The LINK will be added after the `message-links-link-header' if it is not
+already present or added to the link list."
+  (interactive "sLink to insert: ")
+  (message-links--add-link-impl link))
+
+(defun message-links--convert-link-from-bounds (bounds)
+  "Add BOUNDS as a link."
+  (let ((link (buffer-substring-no-properties (car bounds) (cdr bounds))))
+    (delete-region (car bounds) (cdr bounds))
+    (save-excursion
+      (goto-char (car bounds))
+      (message-links--add-link-impl link))))
+
+(defun message-links-convert-link-at-point ()
+  "Convert the link at the cursor to a footnote link."
+  (interactive)
+  (let ((bounds (funcall message-links-match-link-at-point-fn)))
+    (cond
+     (bounds
+      (message-links--convert-link-from-bounds bounds))
+     (t
+      (message "No link at point")))))
+
+(defun message-links-convert-links-all ()
+  "Convert all links in the buffer (or active-region) to footnotes."
+  (interactive)
+  (let ((region-min (point-min))
+        (region-max (point-max))
+        (has-region nil)
+        (bounds nil)
+        (count 0)
+        (pos-last -1)
+        (footnote-regex (message-links--footnote-link-regex)))
+
+    ;; Isolate to a region when found.
+    (when (region-active-p)
+      (setq region-min (region-beginning) )
+      (setq region-max (region-end))
+      (setq has-region t))
+
+    (save-excursion
+      (goto-char region-min)
+      (while (and (setq bounds (funcall message-links-match-link-forward-fn region-max))
+                  ;; Ensure a misbehaving forward function never enters
+                  ;; an eternal loop by scanning backwards.
+                  (< pos-last  (car bounds))
+
+                  ;; Finally check this link is not it's self
+                  ;; part of a referenced link.
+                  (save-excursion
+                    (goto-char (car bounds))
+                    (beginning-of-line)
+                    (not (looking-at footnote-regex t))))
+        ;; Step to the end of the newly added link reference.
+        (setq pos-last (message-links--convert-link-from-bounds bounds))
+        (goto-char pos-last)
+        (setq count (1+ count))))
+
+    (cond
+     ((zerop count)
+      (message "No links found in %s"
+               (if has-region "region" "buffer")))
+     (t
+      (message "Added %d link(s) in %s"
+               count
+               (if has-region "region" "buffer"))))))
 
 (defun message-links--extract-footnote-links ()
   "Extract the footnotes links in the buffer.
