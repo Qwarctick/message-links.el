@@ -72,6 +72,7 @@ If the default is used, links in text looks like '[1]'"
   :type 'function
   :group 'message-links)
 
+
 ;;; Implementations of link matching functions.
 
 (require 'thingatpt)
@@ -91,6 +92,9 @@ If the default is used, links in text looks like '[1]'"
           (skip-chars-forward "^[:blank:]\n" limit)
           (skip-chars-forward "[:blank:]\n" limit))))
     bounds))
+
+
+;;; Private Implementations.
 
 (defun message-links--add-link-impl (link)
   "Add LINK, returning the point where the link reference ends."
@@ -124,13 +128,6 @@ If the default is used, links in text looks like '[1]'"
                         link))))
       pos-result)))
 
-(defun message-links-add-link (link)
-  "Insert the LINK under the text.
-The LINK will be added after the `message-links-link-header' if it is not
-already present or added to the link list."
-  (interactive "sLink to insert: ")
-  (message-links--add-link-impl link))
-
 (defun message-links--convert-link-from-bounds (bounds)
   "Add BOUNDS as a link."
   (let ((link (buffer-substring-no-properties (car bounds) (cdr bounds))))
@@ -139,33 +136,13 @@ already present or added to the link list."
       (goto-char (car bounds))
       (message-links--add-link-impl link))))
 
-(defun message-links-convert-link-at-point ()
-  "Convert the link at the cursor to a footnote link."
-  (interactive)
-  (let ((bounds (funcall message-links-match-link-at-point-fn)))
-    (cond
-     (bounds
-      (message-links--convert-link-from-bounds bounds))
-     (t
-      (message "No link at point")))))
-
-(defun message-links-convert-links-all ()
-  "Convert all links in the buffer (or active-region) to footnotes."
-  (interactive)
-  (let ((region-min (point-min))
-        (region-max (point-max))
-        (has-region nil)
-        (bounds nil)
+(defun message-links--convert-links-all-in-region (region-min region-max)
+  "Convert all links in REGION-MIN, REGION-MAX range.
+Return the number of links converted."
+  (let ((bounds nil)
         (count 0)
         (pos-last -1)
         (footnote-regex (message-links--footnote-link-regex)))
-
-    ;; Isolate to a region when found.
-    (when (region-active-p)
-      (setq region-min (region-beginning) )
-      (setq region-max (region-end))
-      (setq has-region t))
-
     (save-excursion
       (goto-char region-min)
       (while (and (setq bounds (funcall message-links-match-link-forward-fn region-max))
@@ -183,15 +160,7 @@ already present or added to the link list."
         (setq pos-last (message-links--convert-link-from-bounds bounds))
         (goto-char pos-last)
         (setq count (1+ count))))
-
-    (cond
-     ((zerop count)
-      (message "No links found in %s"
-               (if has-region "region" "buffer")))
-     (t
-      (message "Added %d link(s) in %s"
-               count
-               (if has-region "region" "buffer"))))))
+    count))
 
 (defun message-links--extract-footnote-links ()
   "Extract the footnotes links in the buffer.
@@ -243,7 +212,52 @@ To be inserted in the body text."
    index
    (cdr message-links-sep-text-link)))
 
+;;; Public Functions (Auto-Loaded).
+
+;;;###autoload
+(defun message-links-add-link (link)
+  "Insert the LINK under the text.
+The LINK will be added after the `message-links-link-header' if it is not
+already present or added to the link list."
+  (interactive "sLink to insert: ")
+  (message-links--add-link-impl link))
+
+;;;###autoload
 (defalias 'message-links-add 'message-links-add-link)
+
+;;;###autoload
+(defun message-links-convert-link-at-point ()
+  "Convert the link at the cursor to a footnote link."
+  (interactive)
+  (let ((bounds (funcall message-links-match-link-at-point-fn)))
+    (cond
+     (bounds
+      (message-links--convert-link-from-bounds bounds))
+     (t
+      (message "No link at point")))))
+
+;;;###autoload
+(defun message-links-convert-links-all ()
+  "Convert all links in the buffer (or active-region) to footnotes."
+  (interactive)
+  (let ((region-min (point-min))
+        (region-max (point-max))
+        (has-region nil))
+
+    ;; Isolate to a region when found.
+    (when (region-active-p)
+      (setq region-min (region-beginning) )
+      (setq region-max (region-end))
+      (setq has-region t))
+    (let ((count (message-links--convert-links-all-in-region region-min region-max)))
+      (cond
+       ((zerop count)
+        (message "No links found in %s"
+                 (if has-region "region" "buffer")))
+       (t
+        (message "Added %d link(s) in %s"
+                 count
+                 (if has-region "region" "buffer")))))))
 
 (provide 'message-links)
 ;;; message-links.el ends here
