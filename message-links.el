@@ -97,36 +97,35 @@ If the default is used, links in text looks like '[1]'"
 ;;; Private Implementations.
 
 (defun message-links--add-link-impl (link)
-  "Add LINK, returning the point where the link reference ends."
-  (save-excursion
-    (let ((short-link-index (number-to-string
-                             (1+ (message-links--get-max-footnote-link))))
-          (pos-result nil))
-      (insert (message-links--gen-text-link short-link-index))
-      (setq pos-result (point))
-
+  "Add LINK, leaving the point where the link reference ends."
+  (let ((short-link-index (number-to-string
+                           (1+ (message-links--get-max-footnote-link))))
+        (pos-init (point)))
+    (cond
+     ;; Insert link after the link header if used.
+     (message-links-link-header
       (cond
-       ;; Insert link after the link header if used.
-       (message-links-link-header
-        (cond
-         ;; No message-links-link-header present in the message.
-         ((not (search-forward message-links-link-header nil t))
-          (goto-char (point-max))
-          (insert message-links-link-header)
-          (insert (message-links--gen-footnotes-link short-link-index) link))
-         ;; Message found in the compose message.
-         (t
-          (goto-char (point-max))
-          (insert (concat "\n"
-                          (message-links--gen-footnotes-link short-link-index)
-                          link)))))
-       ;; Insert links without the link header.
+       ;; No message-links-link-header present in the message.
+       ((not (search-forward message-links-link-header nil t))
+        (goto-char (point-max))
+        (insert message-links-link-header)
+        (insert (message-links--gen-footnotes-link short-link-index) link))
+       ;; Message found in the compose message.
        (t
         (goto-char (point-max))
         (insert (concat "\n"
                         (message-links--gen-footnotes-link short-link-index)
-                        link))))
-      pos-result)))
+                        link)))))
+     ;; Insert links without the link header.
+     (t
+      (goto-char (point-max))
+      (insert (concat "\n"
+                      (message-links--gen-footnotes-link short-link-index)
+                      link))))
+
+    ;; Leave the cursor after the link text (as if the user had typed it in).
+    (goto-char pos-init)
+    (insert (message-links--gen-text-link short-link-index))))
 
 (defun message-links--convert-link-from-bounds (bounds)
   "Add BOUNDS as a link."
@@ -134,7 +133,8 @@ If the default is used, links in text looks like '[1]'"
     (delete-region (car bounds) (cdr bounds))
     (save-excursion
       (goto-char (car bounds))
-      (message-links--add-link-impl link))))
+      (message-links--add-link-impl link)
+      (point))))
 
 (defun message-links--convert-links-all-in-region (region-min region-max)
   "Convert all links in REGION-MIN, REGION-MAX range.
@@ -232,7 +232,7 @@ already present or added to the link list."
   (let ((bounds (funcall message-links-match-link-at-point-fn)))
     (cond
      (bounds
-      (message-links--convert-link-from-bounds bounds))
+      (goto-char (message-links--convert-link-from-bounds bounds)))
      (t
       (message "No link at point")))))
 
