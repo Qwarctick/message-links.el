@@ -109,19 +109,20 @@ If the default is used, links in text looks like '[1]'"
        ((not (search-forward message-links-link-header nil t))
         (goto-char (point-max))
         (insert message-links-link-header)
-        (insert (message-links--gen-footnotes-link short-link-index) link))
+        (insert (message-links--gen-footnotes-link short-link-index)
+                link))
        ;; Message found in the compose message.
        (t
         (goto-char (point-max))
-        (insert (concat "\n"
-                        (message-links--gen-footnotes-link short-link-index)
-                        link)))))
+        (insert "\n"
+                (message-links--gen-footnotes-link short-link-index)
+                link))))
      ;; Insert links without the link header.
      (t
       (goto-char (point-max))
-      (insert (concat "\n"
-                      (message-links--gen-footnotes-link short-link-index)
-                      link))))
+      (insert "\n"
+              (message-links--gen-footnotes-link short-link-index)
+              link)))
 
     ;; Leave the cursor after the link text (as if the user had typed it in).
     (goto-char pos-init)
