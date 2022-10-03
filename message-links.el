@@ -48,8 +48,8 @@ Use the link header to separate original text from links."
 
 (defcustom message-links-sep-footnotes-link
   '("[" . "] : ")
-  "The text to use for links in the footnotes
-If the default is used, links in footnotes looks like '[1] : '"
+  "The text to use for links in the footnotes.
+If the default is used, links in footnotes looks like '[1] : '."
   :type 'alist
   :group 'message-links)
 
@@ -96,7 +96,7 @@ If the default is used, links in text looks like '[1]'"
   "Add LINK, returning the point where the link reference ends."
   (save-excursion
     (let ((short-link-index (number-to-string
-                             (1+ (message--links-get-max-footnote-link))))
+                             (1+ (message-links--get-max-footnote-link))))
           (pos-result nil))
       (insert (message-links--gen-text-link short-link-index))
       (setq pos-result (point))
@@ -204,7 +204,7 @@ Return a list of string or nil"
           (push (match-string-no-properties 0) footnote-links))))
     footnote-links))
 
-(defun message--links-get-max-footnote-link ()
+(defun message-links--get-max-footnote-link ()
   "Get the maximum index of the footnote links in the buffer.
 Return the maximum value if links can be found in the buffer.
 Else, return `message-links-index-start' minus 1."
@@ -228,14 +228,16 @@ Else, return `message-links-index-start' minus 1."
    (regexp-quote (cdr message-links-sep-footnotes-link))))
 
 (defun message-links--gen-footnotes-link (index)
-  "Generate the link to insert at the bottom (footnote) of the buffer"
+  "Generate the link prefix from INDEX.
+To be inserted at the bottom (footnote) of the buffer."
   (concat
    (car message-links-sep-footnotes-link)
    index
    (cdr message-links-sep-footnotes-link)))
 
 (defun message-links--gen-text-link (index)
-  "Generate the link to insert in the text."
+  "Generate the in-line link text from INDEX.
+To be inserted in the body text."
   (concat
    (car message-links-sep-text-link)
    index
@@ -243,4 +245,5 @@ Else, return `message-links-index-start' minus 1."
 
 (defalias 'message-links-add 'message-links-add-link)
 
+(provide 'message-links)
 ;;; message-links.el ends here
