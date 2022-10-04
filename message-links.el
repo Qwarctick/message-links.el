@@ -26,7 +26,7 @@
   :group 'message)
 
 (defcustom message-links-link-header
-  "\n\n---links---\n"
+  "---links---"
   "Header used to separate links from the original text.
 If set to nil, no header will be used."
   :type 'string
@@ -111,9 +111,13 @@ If the default is used, links in text looks like '[1]'"
      (message-links-link-header
       (cond
        ;; No message-links-link-header present in the message.
-       ((not (search-forward message-links-link-header nil t))
+       ((not (save-match-data
+               (re-search-forward
+                (message-links--gen-link-header-search-regex) nil t)))
         (message-links--goto-last-non-blank-eol)
-        (insert message-links-link-header)
+        (insert "\n\n"
+                message-links-link-header
+                "\n")
         (insert (message-links--gen-footnotes-link short-link-index)
                 link))
        ;; Message found in the compose message.
@@ -217,6 +221,13 @@ To be inserted in the body text."
    (car message-links-sep-text-link)
    index
    (cdr message-links-sep-text-link)))
+
+(defun message-links--gen-link-header-search-regex ()
+  "Generate the regex used to search for the header."
+  (concat
+   "^[:blank:]*"
+   (regexp-quote message-links-link-header)
+   "[:blank:]*$"))
 
 ;;; Public Functions (Auto-Loaded).
 
