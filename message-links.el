@@ -96,6 +96,11 @@ If the default is used, links in text looks like '[1]'"
 
 ;;; Private Implementations.
 
+(defun message-links--goto-last-non-blank-eol ()
+  "Move the cursor to the line ending of the last non-blank line."
+  (goto-char (point-max))
+  (skip-chars-backward "[:blank:]\n" (point-min)))
+
 (defun message-links--add-link-impl (link)
   "Add LINK, leaving the point where the link reference ends."
   (let ((short-link-index (number-to-string
@@ -107,19 +112,19 @@ If the default is used, links in text looks like '[1]'"
       (cond
        ;; No message-links-link-header present in the message.
        ((not (search-forward message-links-link-header nil t))
-        (goto-char (point-max))
+        (message-links--goto-last-non-blank-eol)
         (insert message-links-link-header)
         (insert (message-links--gen-footnotes-link short-link-index)
                 link))
        ;; Message found in the compose message.
        (t
-        (goto-char (point-max))
+        (message-links--goto-last-non-blank-eol)
         (insert "\n"
                 (message-links--gen-footnotes-link short-link-index)
                 link))))
      ;; Insert links without the link header.
      (t
-      (goto-char (point-max))
+      (message-links--goto-last-non-blank-eol)
       (insert "\n"
               (message-links--gen-footnotes-link short-link-index)
               link)))

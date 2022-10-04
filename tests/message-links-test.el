@@ -64,9 +64,8 @@
    (list
     "Link to [1] page.\n"
     "\n"
-    "\n"
     "---links---\n"
-    "[1] : https://www.gnu.org")))
+    "[1] : https://www.gnu.org\n")))
 
 (provide 'message-links-test)
 ;;; message-links-test.el ends here
