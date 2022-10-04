@@ -106,32 +106,25 @@ If the default is used, links in text looks like '[1]'"
   (let ((short-link-index (number-to-string
                            (1+ (message-links--get-max-footnote-link))))
         (pos-init (point)))
+
     (cond
-     ;; Insert link after the link header if used.
      (message-links-link-header
+      ;; Ensure message-links-link-header present in the message (when non-nil).
       (cond
-       ;; No message-links-link-header present in the message.
-       ((not (save-match-data
-               (re-search-forward
-                (message-links--gen-link-header-search-regex) nil t)))
-        (message-links--goto-last-non-blank-eol)
-        (insert "\n\n"
-                message-links-link-header
-                "\n")
-        (insert (message-links--gen-footnotes-link short-link-index)
-                link))
-       ;; Message found in the compose message.
+       ((save-match-data
+          (re-search-forward
+           (message-links--gen-link-header-search-regex) nil t))
+        (message-links--goto-last-non-blank-eol))
        (t
         (message-links--goto-last-non-blank-eol)
-        (insert "\n"
-                (message-links--gen-footnotes-link short-link-index)
-                link))))
-     ;; Insert links without the link header.
+        (insert "\n\n" message-links-link-header))))
+     ;; No link header expected.
      (t
-      (message-links--goto-last-non-blank-eol)
-      (insert "\n"
-              (message-links--gen-footnotes-link short-link-index)
-              link)))
+      (message-links--goto-last-non-blank-eol)))
+
+    (insert "\n"
+            (message-links--gen-footnotes-link short-link-index)
+            link)
 
     ;; Leave the cursor after the link text (as if the user had typed it in).
     (goto-char pos-init)
