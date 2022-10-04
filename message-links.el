@@ -120,7 +120,14 @@ If the default is used, links in text looks like '[1]'"
         (insert "\n\n" message-links-link-header))))
      ;; No link header expected.
      (t
-      (message-links--goto-last-non-blank-eol)))
+      (message-links--goto-last-non-blank-eol)
+
+      ;; When inserting the first link without an explicit header:
+      ;; add a blank line separating links from non-link text
+      ;; (not essential but reads better).
+      (when (string-equal (number-to-string message-links-index-start)
+                          short-link-index)
+        (insert "\n"))))
 
     (insert "\n"
             (message-links--gen-footnotes-link short-link-index)

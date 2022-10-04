@@ -67,5 +67,16 @@
     "---links---\n"
     "[1] : https://www.gnu.org\n")))
 
+(ert-deftest link-single-no-header ()
+  "Convert a single link (without a header)."
+  (let ((message-links-link-header nil))
+    (message-links-test--convert-all-links-from-before-after
+     (list "Link to https://www.gnu.org page.\n")
+     (list
+      "Link to [1] page.\n"
+      "\n"
+      "[1] : https://www.gnu.org\n"))))
+
+
 (provide 'message-links-test)
 ;;; message-links-test.el ends here
