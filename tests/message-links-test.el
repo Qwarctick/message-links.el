@@ -77,6 +77,41 @@
       "\n"
       "[1] : https://www.gnu.org\n"))))
 
+(ert-deftest link-multi ()
+  "Converts multiple links at once."
+  (message-links-test--convert-all-links-from-before-after
+   (list
+    "Link to https://www.gnu.org page.\n"
+    "\n"
+    "Another link to WIKIPEDIA: https://en.wikipedia.org page.\n"
+    "Two links on the same https://www.test.org line https://www.site.org/\n")
+   (list
+    "Link to [1] page.\n"
+    "\n"
+    "Another link to WIKIPEDIA: [2] page.\n"
+    "Two links on the same [3] line [4]\n"
+    "\n"
+    "---links---\n"
+    "[1] : https://www.gnu.org\n"
+    "[2] : https://en.wikipedia.org\n"
+    "[3] : https://www.test.org\n"
+    "[4] : https://www.site.org/\n")))
+
+(ert-deftest link-with-indented-header ()
+  "Convert with an indented link header (to ensure it's supported)."
+  (let ((message-links-link-header nil))
+    (message-links-test--convert-all-links-from-before-after
+     (list
+      "Link to [1] page, another link to https://www.test.org page.\n"
+      "\n"
+      "    ---links---\n"
+      "[1] : https://www.gnu.org\n")
+     (list
+      "Link to [1] page, another link to [2] page.\n"
+      "\n"
+      "    ---links---\n"
+      "[1] : https://www.gnu.org\n"
+      "[2] : https://www.test.org\n"))))
 
 (provide 'message-links-test)
 ;;; message-links-test.el ends here
