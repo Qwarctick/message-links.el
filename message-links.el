@@ -29,48 +29,41 @@
   "---links---"
   "Header used to separate links from the original text.
 If set to nil, no header will be used."
-  :type 'string
-  :group 'message-links)
+  :type 'string)
 
 (defcustom message-links-index-start
   1
   "Index of the first link inserted."
-  :type 'integer
-  :group 'message-links)
+  :type 'integer)
 
 (defcustom message-links-enable-link-header
   t
   "OBSOLETE: use `message-links-link-header' instead.
 
 Use the link header to separate original text from links."
-  :type 'boolean
-  :group 'message-links)
+  :type 'boolean)
 
 (defcustom message-links-sep-footnotes-link
   '("[" . "] : ")
   "The text to use for links in the footnotes.
 If the default is used, links in footnotes looks like '[1] : '."
-  :type 'alist
-  :group 'message-links)
+  :type 'alist)
 
 (defcustom message-links-sep-text-link
   '("[" . "]")
   "The text to use for number link in the text.
 If the default is used, links in text looks like '[1]'"
-  :type 'alist
-  :group 'message-links)
+  :type 'alist)
 
 (defcustom message-links-match-link-at-point-fn
   'message-links-match-link-at-point-default
   "Function that matches a link at the point."
-  :type 'function
-  :group 'message-links)
+  :type 'function)
 
 (defcustom message-links-match-link-forward-fn
   'message-links-match-link-forward-default
   "Function that finds the next link, taking a single LIMIT argument."
-  :type 'function
-  :group 'message-links)
+  :type 'function)
 
 
 ;;; Implementations of link matching functions.
