@@ -225,9 +225,9 @@ To be inserted in the body text."
 (defun message-links--gen-link-header-search-regex ()
   "Generate the regex used to search for the header."
   (concat
-   "^[:blank:]*"
+   "^[[:blank:]]*"
    (regexp-quote message-links-link-header)
-   "[:blank:]*$"))
+   "[[:blank:]]*$"))
 
 ;;; Public Functions (Auto-Loaded).
 
