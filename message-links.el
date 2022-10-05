@@ -29,7 +29,7 @@
   "---links---"
   "Header used to separate links from the original text.
 If set to nil, no header will be used."
-  :type 'string)
+  :type '(choice (const nil) string))
 
 (defcustom message-links-index-start
   1
@@ -47,13 +47,13 @@ Use the link header to separate original text from links."
   '("[" . "] : ")
   "The text to use for links in the footnotes.
 If the default is used, links in footnotes looks like '[1] : '."
-  :type 'alist)
+  :type '(cons string string))
 
 (defcustom message-links-sep-text-link
   '("[" . "]")
   "The text to use for number link in the text.
 If the default is used, links in text looks like '[1]'"
-  :type 'alist)
+  :type '(cons string string))
 
 (defcustom message-links-match-link-at-point-fn
   'message-links-match-link-at-point-default
