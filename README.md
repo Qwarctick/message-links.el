@@ -60,6 +60,7 @@ Then press `C-c l` when composing a message to add a link.
 - `message-links-add-link` enter a new link.
 - `message-links-convert-link-at-point` match a link at the cursor location, and convert it to a referenced link (this uses `message-links-match-link-at-point-fn` to identify links).
 - `message-links-convert-links-all` convert all links to references in the buffer or active region (using `message-links-match-link-forward-fn` to scan for links).
+- `message-links-renumber-all` re-number all links starting from `message-links-index-start`, putting the footnotes in order if necessary. This can be useful when editing paragraphs that contain links which may become un-ordered.
 
 ## customization
 

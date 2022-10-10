@@ -39,6 +39,11 @@
   (message-links-convert-links-all)
   (buffer-substring-no-properties (point-min) (point-max)))
 
+(defun message-links-test--do-renumber-all-links ()
+  "Run a test on the current buffer using CHAR-ODD & CHAR-EVEN."
+  (message-links-renumber-all)
+  (buffer-substring-no-properties (point-min) (point-max)))
+
 (defmacro message-links-test--convert-all-links-from-before-after (before after)
   `(let ((buf (generate-new-buffer "message-links-test.txt")))
      (let ((before-var ,before)
@@ -49,7 +54,17 @@
                (code-str-result (message-links-test--do-convert-all-links)))
            (should (equal code-str-expect code-str-result)))))))
 
-;;; Tests
+(defmacro message-links-test--renumber-all-links-from-before-after (before after)
+  `(let ((buf (generate-new-buffer "message-links-test.txt")))
+     (let ((before-var ,before)
+           (after-var ,after))
+       (with-current-buffer buf
+         (apply 'insert before-var)
+         (let ((code-str-expect (apply 'concat after-var))
+               (code-str-result (message-links-test--do-renumber-all-links)))
+           (should (equal code-str-expect code-str-result)))))))
+
+;;; Tests: Convert All Links
 
 (ert-deftest link-nop ()
   "Do Nothing."
@@ -112,6 +127,171 @@
       "    ---links---\n"
       "[1] : https://www.gnu.org\n"
       "[2] : https://www.test.org\n"))))
+
+;;; Tests: Renumber All
+
+(ert-deftest renumber-nop-single ()
+  "Renumber simple (no work is needed)."
+  (message-links-test--renumber-all-links-from-before-after
+   (list
+    "Link to [1] page.\n"
+    "\n"
+    "[1] : https://www.gnu.org\n")
+   (list
+    "Link to [1] page.\n"
+    "\n"
+    "[1] : https://www.gnu.org\n")))
+
+(ert-deftest renumber-nop-complex ()
+  "Renumber complex (no work is needed)."
+  (message-links-test--renumber-all-links-from-before-after
+   (list
+    "Link to [1] page.\n"
+    "\n"
+    "Another link to WIKIPEDIA: [2] page.\n"
+    "Two links on the same [3] line [4]\n"
+    "\n"
+    "---links---\n"
+    "[1] : https://www.gnu.org\n"
+    "[2] : https://en.wikipedia.org\n"
+    "[3] : https://www.test.org\n"
+    "[4] : https://www.site.org/\n")
+   (list
+    "Link to [1] page.\n"
+    "\n"
+    "Another link to WIKIPEDIA: [2] page.\n"
+    "Two links on the same [3] line [4]\n"
+    "\n"
+    "---links---\n"
+    "[1] : https://www.gnu.org\n"
+    "[2] : https://en.wikipedia.org\n"
+    "[3] : https://www.test.org\n"
+    "[4] : https://www.site.org/\n")))
+
+(ert-deftest renumber-single ()
+  "Renumber a single link."
+  (message-links-test--renumber-all-links-from-before-after
+   (list
+    "Link to [123] page.\n"
+    "\n"
+    "[123] : https://www.gnu.org\n")
+   (list
+    "Link to [1] page.\n"
+    "\n"
+    "[1] : https://www.gnu.org\n")))
+
+(ert-deftest renumber-complex ()
+  "Renumber more complex links."
+  (message-links-test--renumber-all-links-from-before-after
+   (list
+    "Link to [65535] page.\n"
+    "\n"
+    "Another link to WIKIPEDIA: [0] page.\n"
+    "Two links on the same [16777216] line [4]\n"
+    "\n"
+    "---links---\n"
+    "[65535] : https://www.gnu.org\n"
+    "[0] : https://en.wikipedia.org\n"
+    "[16777216] : https://www.test.org\n"
+    "[4] : https://www.site.org/\n")
+   (list
+    "Link to [1] page.\n"
+    "\n"
+    "Another link to WIKIPEDIA: [2] page.\n"
+    "Two links on the same [3] line [4]\n"
+    "\n"
+    "---links---\n"
+    "[1] : https://www.gnu.org\n"
+    "[2] : https://en.wikipedia.org\n"
+    "[3] : https://www.test.org\n"
+    "[4] : https://www.site.org/\n")))
+
+(ert-deftest renumber-complex-no-header ()
+  "Renumber more complex links (without a header)."
+  (let ((message-links-link-header nil))
+    (message-links-test--renumber-all-links-from-before-after
+     (list
+      "Link to [65535] page.\n"
+      "\n"
+      "Another link to WIKIPEDIA: [0] page.\n"
+      "Two links on the same [16777216] line [4]\n"
+      "\n"
+      "[65535] : https://www.gnu.org\n"
+      "[0] : https://en.wikipedia.org\n"
+      "[16777216] : https://www.test.org\n"
+      "[4] : https://www.site.org/\n")
+     (list
+      "Link to [1] page.\n"
+      "\n"
+      "Another link to WIKIPEDIA: [2] page.\n"
+      "Two links on the same [3] line [4]\n"
+      "\n"
+      "[1] : https://www.gnu.org\n"
+      "[2] : https://en.wikipedia.org\n"
+      "[3] : https://www.test.org\n"
+      "[4] : https://www.site.org/\n"))))
+
+(ert-deftest renumber-complex-and-sort ()
+  "Renumber a complex links that require sorting."
+  (message-links-test--renumber-all-links-from-before-after
+   (list
+    "Link to [65535] page.\n"
+    "\n"
+    "Another link to WIKIPEDIA: [0] page.\n"
+    "Two links on the same [16777216] line [4]\n"
+    "\n"
+    "---links---\n"
+    "[4] : https://www.site.org/\n"
+    "[16777216] : https://www.test.org\n"
+    "[0] : https://en.wikipedia.org\n"
+    "[65535] : https://www.gnu.org\n")
+   (list
+    "Link to [1] page.\n"
+    "\n"
+    "Another link to WIKIPEDIA: [2] page.\n"
+    "Two links on the same [3] line [4]\n"
+    "\n"
+    "---links---\n"
+    "[1] : https://www.gnu.org\n"
+    "[2] : https://en.wikipedia.org\n"
+    "[3] : https://www.test.org\n"
+    "[4] : https://www.site.org/\n")))
+
+(ert-deftest renumber-complex-and-sort-fragmented ()
+  "Renumber a complex links & sort, with contents between links."
+  (message-links-test--renumber-all-links-from-before-after
+   (list
+    "Link to [65535] page.\n"
+    "\n"
+    "Another link to WIKIPEDIA: [0] page.\n"
+    "Two links on the same [16777216] line [4]\n"
+    "\n"
+    "---links---\n"
+    "[4] : https://www.site.org/\n"
+    "\n"
+    "[16777216] : https://www.test.org\n"
+    "Some text\n"
+    "[0] : https://en.wikipedia.org\n"
+    "Some more text\n"
+    "\n"
+    "\n"
+    "[65535] : https://www.gnu.org\n")
+   (list
+    "Link to [1] page.\n"
+    "\n"
+    "Another link to WIKIPEDIA: [2] page.\n"
+    "Two links on the same [3] line [4]\n"
+    "\n"
+    "---links---\n"
+    "[1] : https://www.gnu.org\n"
+    "\n"
+    "[2] : https://en.wikipedia.org\n"
+    "Some text\n"
+    "[3] : https://www.test.org\n"
+    "Some more text\n"
+    "\n"
+    "\n"
+    "[4] : https://www.site.org/\n")))
 
 (provide 'message-links-test)
 ;;; message-links-test.el ends here

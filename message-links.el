@@ -192,12 +192,21 @@ Else, return `message-links-index-start' minus 1."
       (1- message-links-index-start))))
 
 (defun message-links--footnote-link-regex ()
-  "Generate the regex used to extract the footnote links."
+  "Generate the regex used to extract the footnote links.
+Match group 1 isolates the number."
   (concat
    "^"
    (regexp-quote (car message-links-sep-footnotes-link))
-   "[0-9]+"
+   "\\([0-9]+\\)"
    (regexp-quote (cdr message-links-sep-footnotes-link))))
+
+(defun message-links--text-link-regex ()
+  "Generate the regex used to extract the text link.
+Match group 1 isolates the number."
+  (concat
+   (regexp-quote (car message-links-sep-text-link))
+   "\\([0-9]+\\)"
+   (regexp-quote (cdr message-links-sep-text-link))))
 
 (defun message-links--gen-footnotes-link (index)
   "Generate the link prefix from INDEX.
@@ -268,6 +277,140 @@ already present or added to the link list."
         (message "Added %d link(s) in %s"
                  count
                  (if has-region "region" "buffer")))))))
+
+;;;###autoload
+(defun message-links-renumber-all ()
+  "Re-number all links according to their appearance in the document."
+  (interactive)
+  ;; The footnote map maps number as keys with the values (beg . end)
+  ;; positions in the buffers.
+  (let ((footnote-map (make-hash-table :test 'eq))
+        ;; A list of (beg . end) of each link-text.
+        (link-bounds-list (list))
+        ;; The line beginning position of the link-header
+        ;; else where the first footnote occurs.
+        ;; Use for search limiting to prevent footnote matches
+        ;; also being used as link-text.
+        (footnote-beg nil)
+
+        ;; Count changes (for reporting).
+        (count-edits 0)
+        (count-missing-links 0)
+        ;; Keep track of the last index (+1).
+        (count-index 0))
+    (save-excursion
+      ;; Scan footnotes for link destinations.
+      (save-match-data
+        (let ((regex (message-links--footnote-link-regex)))
+          (goto-char (point-min))
+          (when message-links-link-header
+            (when (re-search-forward
+                   (message-links--gen-link-header-search-regex) nil t)
+              (setq footnote-beg (line-beginning-position))))
+          (while (re-search-forward regex nil t)
+            (when (null footnote-beg)
+              (setq footnote-beg (line-beginning-position)))
+            (let ((beg (match-beginning 1))
+                  (end (match-end 1)))
+              (let ((key (string-to-number
+                          (buffer-substring-no-properties beg end)))
+                    (val (cons beg end)))
+                (puthash key val footnote-map))))
+          ;; Set to avoid errors (no footnotes were found).
+          (unless footnote-beg
+            (setq footnote-beg (point-max))))
+
+        ;; Scan the body text for for link-text.
+        ;; Search backwards so the list is constructed smallest to largest.
+        (save-match-data
+          (let ((regex (message-links--text-link-regex)))
+            (goto-char footnote-beg)
+            (while (re-search-backward regex nil t)
+              (let ((beg (match-beginning 1))
+                    (end (match-end 1)))
+                (let ((val (cons beg end)))
+                  (push val link-bounds-list)))))))
+
+      (let ((index message-links-index-start)
+            (edit-list (list)))
+        (while link-bounds-list
+          (let* ((lnk-bounds (pop link-bounds-list))
+                 (lnk-key
+                  (string-to-number
+                   (buffer-substring-no-properties
+                    (car lnk-bounds) (cdr lnk-bounds)))))
+            (unless (eq index lnk-key)
+              (let ((def-bounds (gethash lnk-key footnote-map)))
+                (cond
+                 (def-bounds
+                  (let ((index-as-string (number-to-string index)))
+                    (push (cons lnk-bounds index-as-string) edit-list)
+                    (push (cons def-bounds index-as-string) edit-list)))
+                 (t
+                  (setq count-missing-links (1+ count-missing-links))))))
+            (setq index (1+ index))))
+        (setq count-index index)
+
+        ;; Sort and apply edit-list from last to first
+        ;; (so number-width doesn't invalidate bounds).
+        (setq edit-list (sort edit-list
+                              (lambda (a b) (> (car (car a))
+                                               (car (car b))))))
+        (while edit-list
+          (let ((edit (pop edit-list)))
+            (let ((bounds (car edit))
+                  (text (cdr edit)))
+              (setq count-edits (1+ count-edits))
+              (goto-char (car bounds))
+              (delete-region (car bounds) (cdr bounds))
+              (insert text)))))
+
+      ;; Now re-order the footnote lines to match the order they're referenced.
+      (let ((footnote-bounds-list (list))
+            ;; Map link numbers to the `line-text' in `footnote-bounds-list'.
+            (line-text-from-number (make-hash-table :test 'eq)))
+
+        (save-match-data
+          (let ((regex (message-links--footnote-link-regex)))
+            (goto-char footnote-beg)
+            (while (re-search-forward regex nil t)
+              (let* ((beg (match-beginning 1))
+                     (end (match-end 1))
+                     (key (string-to-number
+                           (buffer-substring-no-properties beg end)))
+                     (bol (line-beginning-position))
+                     (eol (line-end-position))
+                     (line-text (buffer-substring-no-properties bol eol)))
+                (push (cons (cons bol eol) key) footnote-bounds-list)
+                (puthash key line-text line-text-from-number)))))
+
+        ;; Sort by their location in the buffer.
+        (setq footnote-bounds-list (sort footnote-bounds-list
+                                         (lambda (a b) (> (car (car a))
+                                                          (car (car b))))))
+        (let ((index (1- count-index)))
+          (while footnote-bounds-list
+            (pcase-let ((`((,beg . ,end) . ,key) (pop footnote-bounds-list)))
+              (unless (eq index key)
+                (goto-char beg)
+                (delete-region beg end)
+                (insert (gethash index line-text-from-number))))
+            (setq index (1- index))))))
+
+    ;; Report results.
+    (let ((report-edits-made
+           (cond
+            ((zerop count-edits) "not required")
+            (t (format "%d links" count-edits))))
+          (report-links-found (format " (%d link(s) found)" count-index))
+          (report-links-missing
+           (cond
+            ((zerop count-missing-links) "")
+            (t (format ", (%d link(s) missing)" count-missing-links)))))
+      (message "Renumber: %s"
+               (concat report-edits-made
+                       report-links-found
+                       report-links-missing)))))
 
 (provide 'message-links)
 ;;; message-links.el ends here
