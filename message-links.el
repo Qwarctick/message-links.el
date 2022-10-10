@@ -65,6 +65,16 @@ If the default is used, links in text looks like '[1]'"
   "Function that finds the next link, taking a single LIMIT argument."
   :type 'function)
 
+(defcustom message-links-limit-range-fn
+  'message-links-limit-range-default
+  "Return a cons cell with minimum & maximum range.
+By default this returns ((point-min) . (point-max)).
+
+Use to limit the region considered for links and link creation.
+This can be useful for adding links to commit-logs which often
+show status which is ignored at the end of the commit message."
+  :type 'function
+  :group 'message-links)
 
 ;;; Implementations of link matching functions.
 
@@ -86,8 +96,21 @@ If the default is used, links in text looks like '[1]'"
           (skip-chars-forward "[:blank:]\n" limit))))
     bounds))
 
+(defun message-links-limit-range-default ()
+  "Return the minimum/maximum ranges."
+  (cons (point-min) (point-max)))
 
 ;;; Private Implementations.
+
+(defmacro message-links--with-range-limit (&rest body)
+  "Execute BODY with `message-links-limit-range-fn' applied.
+By convention only use in public, interactive functions because.
+While harmless, there is no need to wrap blocks of code multiple times."
+  (declare (indent 1))
+  `(let ((global-range (funcall message-links-limit-range-fn)))
+     (save-restriction
+       (narrow-to-region (car global-range) (cdr global-range))
+       ,@body)))
 
 (defun message-links--goto-last-non-blank-eol ()
   "Move the cursor to the line ending of the last non-blank line."
@@ -231,57 +254,8 @@ To be inserted in the body text."
    (regexp-quote message-links-link-header)
    "[[:blank:]]*$"))
 
-;;; Public Functions (Auto-Loaded).
-
-;;;###autoload
-(defun message-links-add-link (link)
-  "Insert the LINK under the text.
-The LINK will be added after the `message-links-link-header' if it is not
-already present or added to the link list."
-  (interactive "sLink to insert: ")
-  (message-links--add-link-impl link))
-
-;;;###autoload
-(defalias 'message-links-add 'message-links-add-link)
-
-;;;###autoload
-(defun message-links-convert-link-at-point ()
-  "Convert the link at the cursor to a footnote link."
-  (interactive)
-  (let ((bounds (funcall message-links-match-link-at-point-fn)))
-    (cond
-     (bounds
-      (goto-char (message-links--convert-link-from-bounds bounds)))
-     (t
-      (message "No link at point")))))
-
-;;;###autoload
-(defun message-links-convert-links-all ()
-  "Convert all links in the buffer (or active-region) to footnotes."
-  (interactive)
-  (let ((region-min (point-min))
-        (region-max (point-max))
-        (has-region nil))
-
-    ;; Isolate to a region when found.
-    (when (region-active-p)
-      (setq region-min (region-beginning) )
-      (setq region-max (region-end))
-      (setq has-region t))
-    (let ((count (message-links--convert-links-all-in-region region-min region-max)))
-      (cond
-       ((zerop count)
-        (message "No links found in %s"
-                 (if has-region "region" "buffer")))
-       (t
-        (message "Added %d link(s) in %s"
-                 count
-                 (if has-region "region" "buffer")))))))
-
-;;;###autoload
-(defun message-links-renumber-all ()
+(defun message-links--renumber-all-impl ()
   "Re-number all links according to their appearance in the document."
-  (interactive)
   ;; The footnote map maps number as keys with the values (beg . end)
   ;; positions in the buffers.
   (let ((footnote-map (make-hash-table :test 'eq))
@@ -411,6 +385,65 @@ already present or added to the link list."
                (concat report-edits-made
                        report-links-found
                        report-links-missing)))))
+
+;;; Public Functions (Auto-Loaded).
+
+;;;###autoload
+(defun message-links-add-link (link)
+  "Insert the LINK under the text.
+The LINK will be added after the `message-links-link-header' if it is not
+already present or added to the link list."
+  (interactive "sLink to insert: ")
+  (message-links--with-range-limit
+   (message-links--add-link-impl link)))
+
+;;;###autoload
+(defalias 'message-links-add 'message-links-add-link)
+
+;;;###autoload
+(defun message-links-convert-link-at-point ()
+  "Convert the link at the cursor to a footnote link."
+  (interactive)
+  (message-links--with-range-limit
+   (let ((bounds (funcall message-links-match-link-at-point-fn)))
+     (cond
+      (bounds
+       (goto-char (message-links--convert-link-from-bounds bounds)))
+      (t
+       (message "No link at point"))))))
+
+;;;###autoload
+(defun message-links-convert-links-all ()
+  "Convert all links in the buffer (or active-region) to footnotes."
+  (interactive)
+  (let ((region-min (point-min))
+        (region-max (point-max))
+        (has-region nil))
+
+    ;; Isolate to a region when found.
+    (when (region-active-p)
+      (setq region-min (region-beginning) )
+      (setq region-max (region-end))
+      (setq has-region t))
+    (let ((count
+           (message-links--with-range-limit
+            (message-links--convert-links-all-in-region region-min region-max))))
+      (cond
+       ((zerop count)
+        (message "No links found in %s"
+                 (if has-region "region" "buffer")))
+       (t
+        (message "Added %d link(s) in %s"
+                 count
+                 (if has-region "region" "buffer")))))))
+
+;;;###autoload
+(defun message-links-renumber-all ()
+  "Re-number all links according to their appearance in the document."
+  (interactive)
+  (message-links--with-range-limit
+   (message-links--renumber-all-impl)))
+
 
 (provide 'message-links)
 ;;; message-links.el ends here
