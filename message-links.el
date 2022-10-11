@@ -25,32 +25,27 @@
   "Manage reference links into text."
   :group 'message)
 
-(defcustom message-links-link-header
-  "---links---"
+(defcustom message-links-link-header "---links---"
   "Header used to separate links from the original text.
 If set to nil, no header will be used."
   :type '(choice (const nil) string))
 
-(defcustom message-links-index-start
-  1
+(defcustom message-links-index-start 1
   "Index of the first link inserted."
   :type 'integer)
 
-(defcustom message-links-enable-link-header
-  t
+(defcustom message-links-enable-link-header t
   "OBSOLETE: use `message-links-link-header' instead.
 
 Use the link header to separate original text from links."
   :type 'boolean)
 
-(defcustom message-links-sep-footnotes-link
-  '("[" . "] : ")
+(defcustom message-links-sep-footnotes-link '("[" . "] : ")
   "The text to use for links in the footnotes.
 If the default is used, links in footnotes looks like '[1] : '."
   :type '(cons string string))
 
-(defcustom message-links-sep-text-link
-  '("[" . "]")
+(defcustom message-links-sep-text-link '("[" . "]")
   "The text to use for number link in the text.
 If the default is used, links in text looks like '[1]'"
   :type '(cons string string))
@@ -65,8 +60,7 @@ If the default is used, links in text looks like '[1]'"
   "Function that finds the next link, taking a single LIMIT argument."
   :type 'function)
 
-(defcustom message-links-limit-range-fn
-  'message-links-limit-range-default
+(defcustom message-links-limit-range-fn 'message-links-limit-range-default
   "Return a cons cell with minimum & maximum range.
 By default this returns ((point-min) . (point-max)).
 
@@ -171,10 +165,11 @@ Return the number of links converted."
         (footnote-regex (message-links--footnote-link-regex)))
     (save-excursion
       (goto-char region-min)
-      (while (and (setq bounds (funcall message-links-match-link-forward-fn region-max))
+      (while (and (setq bounds (funcall message-links-match-link-forward-fn
+                                        region-max))
                   ;; Ensure a misbehaving forward function never enters
                   ;; an eternal loop by scanning backwards.
-                  (< pos-last  (car bounds))
+                  (< pos-last (car bounds))
 
                   ;; Finally check this link is not it's self
                   ;; part of a referenced link.
@@ -422,12 +417,13 @@ already present or added to the link list."
 
     ;; Isolate to a region when found.
     (when (region-active-p)
-      (setq region-min (region-beginning) )
+      (setq region-min (region-beginning))
       (setq region-max (region-end))
       (setq has-region t))
     (let ((count
            (message-links--with-range-limit
-            (message-links--convert-links-all-in-region region-min region-max))))
+            (message-links--convert-links-all-in-region
+             region-min region-max))))
       (cond
        ((zerop count)
         (message "No links found in %s"
