@@ -8,7 +8,7 @@ Emacs library to add reference links in message-mode without html.
 - [What it does](#what-it-does)
 - [How to use](#how-to-use)
 - [customization](#customization)
-
+- [FAQ](#faq)
 <!-- markdown-toc end -->
 
 
@@ -70,4 +70,59 @@ Then press `C-c l` when composing a message to add a link.
 - `message-links-sep-text-link` : Default = `'("[" . "]")` : The text to use for links in the text. Default, links look like `blablabla [1] blablabla`. Customize with `(setq message-links-sep-text-link '("{^" . "}"))` and links in text will look like `blablabla {^1} blablabla`
 - `message-links-match-link-at-point-fn` : Defaults to using thing-at-pt (url). Return the bounds of the link at the point as a cons cell or nil.
 - `message-links-match-link-forward-fn` : Defaults to stepping over white-space for the next `message-links-match-link-at-point-fn`. Takes a single limit argument (representing a buffer position not to seek past), returns the bounds of the next link or nil when none are found.
-- `message-links-limit-range-fn` : Defaults to returning `((point-min) . (point-max))`. Use this to limit the range used for scanning and link insertion. Useful when writing commit messages which often show commented status text at the buffer end. Often it's preferable to add the links before these comments.
+- `message-links-limit-range-fn` : Defaults to returning `((point-min) . (point-max))`. Use this to limit the range used for scanning and link insertion. Useful when writing commit messages which often show commented status text at the buffer end. Often it's preferable to add the links before these comments. For example, see ([FAQ](#faq)).
+
+
+# FAQ
+
+## I don't want to put the links at the bottom of the buffer
+
+  If you work in a GIT/SVN message commit or a message with a lot of reply, you want your links at the bottom of your message and not the bottom of the buffer. Use `message-links-limit-range-fn` for this purpose:  
+  By default:
+  ``` text
+  Hello,
+  
+  Blabla [1], babla [2].
+  
+  > On Thu, 1 Sep 2022, Toto wrote:
+  > blablabla
+  > bla
+  
+  ---links---
+  [1] : foo.org
+  [2] : bar.org
+  ```
+  
+  In fact, wou want to add links just before the repy by tweaking `message-links-limit-range-fn`:  
+  
+  ``` elisp
+  (setq message-links-limit-range-fn (lambda ()
+             (let ((min (point-min))(max (point-max)))
+               (save-excursion
+                 (goto-char min)
+                 (forward-line 1)
+                 (setq min (point))
+                 (when (re-search-forward
+                        (concat "^>")
+                        nil t)
+                   (setq max (line-beginning-position))))
+               (cons min max))))
+  ```
+  
+  It produces
+  
+  ``` text
+  Hello,
+  
+  Blabla [1], babla [2].
+  
+  ---links---
+  [1] : foo.org
+  [2] : bar.org
+  
+  > On Thu, 1 Sep 2022, Toto wrote:
+  > blablabla
+  > bla
+  
+  ```
+  
