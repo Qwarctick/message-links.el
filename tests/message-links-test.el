@@ -128,6 +128,48 @@
       "[1] : https://www.gnu.org\n"
       "[2] : https://www.test.org\n"))))
 
+(ert-deftest link-with-limit-range ()
+  "Convert with a limited range (using commit-message like formatting)."
+  (let ((message-links-limit-range-fn
+         ;; Skip the subject line and comment at the end.
+         ;; Adding links before the comment.
+         (lambda ()
+           (let ((min (point-min))(max (point-max)))
+             (save-excursion
+               (goto-char min)
+               (forward-line 1)
+               (setq min (point))
+               (when (re-search-forward
+                      (concat "^" (regexp-quote "# Ignore lines after this."))
+                      nil t)
+                 (setq max (line-beginning-position))))
+             (cons min max)))))
+    (message-links-test--convert-all-links-from-before-after
+     (list
+      "Subject Line https://www.example.org\n"
+      "\n"
+      "Link to https://www.gnu.org page, another link to https://www.test.org page.\n"
+      "\n"
+      "# Ignore lines after this.\n"
+      "#\n"
+      "# Changes to be committed:\n"
+      "# modified: some_file.txt\n"
+      )
+     (list
+      "Subject Line https://www.example.org\n"
+      "\n"
+      "Link to [1] page, another link to [2] page.\n"
+      "\n"
+      "---links---\n"
+      "[1] : https://www.gnu.org\n"
+      "[2] : https://www.test.org\n"
+      "\n"
+      "# Ignore lines after this.\n"
+      "#\n"
+      "# Changes to be committed:\n"
+      "# modified: some_file.txt\n"
+      ))))
+
 ;;; Tests: Renumber All
 
 (ert-deftest renumber-nop-single ()
