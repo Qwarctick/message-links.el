@@ -67,8 +67,7 @@ By default this returns ((point-min) . (point-max)).
 Use to limit the region considered for links and link creation.
 This can be useful for adding links to commit-logs which often
 show status which is ignored at the end of the commit message."
-  :type 'function
-  :group 'message-links)
+  :type 'function)
 
 ;;; Implementations of link matching functions.
 
