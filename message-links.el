@@ -204,9 +204,11 @@ Else, return `message-links-index-start' minus 1."
                       (and (string-match "\\([0-9]+\\)" x)
                            (string-to-number (match-string 1 x)))))
                   footnote-links)))
-    (if footnotes-indexes
-        (apply #'max footnotes-indexes)
-      (1- message-links-index-start))))
+    (cond
+     (footnotes-indexes
+      (apply #'max footnotes-indexes))
+     (t
+      (1- message-links-index-start)))))
 
 (defun message-links--footnote-link-regex ()
   "Generate the regex used to extract the footnote links.
@@ -368,13 +370,17 @@ To be inserted in the body text."
     ;; Report results.
     (let ((report-edits-made
            (cond
-            ((zerop count-edits) "not required")
-            (t (format "%d links" count-edits))))
+            ((zerop count-edits)
+             "not required")
+            (t
+             (format "%d links" count-edits))))
           (report-links-found (format " (%d link(s) found)" count-index))
           (report-links-missing
            (cond
-            ((zerop count-missing-links) "")
-            (t (format ", (%d link(s) missing)" count-missing-links)))))
+            ((zerop count-missing-links)
+             "")
+            (t
+             (format ", (%d link(s) missing)" count-missing-links)))))
       (message "Renumber: %s"
                (concat report-edits-made
                        report-links-found
