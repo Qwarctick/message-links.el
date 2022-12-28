@@ -99,7 +99,7 @@ show status which is ignored at the end of the commit message."
   "Execute BODY with `message-links-limit-range-fn' applied.
 By convention only use in public, interactive functions because.
 While harmless, there is no need to wrap blocks of code multiple times."
-  (declare (indent 1))
+  (declare (indent 0))
   `(let ((global-range (funcall message-links-limit-range-fn)))
      (save-restriction
        (narrow-to-region (car global-range) (cdr global-range))
@@ -395,7 +395,7 @@ The LINK will be added after the `message-links-link-header' if it is not
 already present or added to the link list."
   (interactive "sLink to insert: ")
   (message-links--with-range-limit
-   (message-links--add-link-impl link)))
+    (message-links--add-link-impl link)))
 
 ;;;###autoload
 (defalias 'message-links-add 'message-links-add-link)
@@ -405,12 +405,12 @@ already present or added to the link list."
   "Convert the link at the cursor to a footnote link."
   (interactive)
   (message-links--with-range-limit
-   (let ((bounds (funcall message-links-match-link-at-point-fn)))
-     (cond
-      (bounds
-       (goto-char (message-links--convert-link-from-bounds bounds)))
-      (t
-       (message "No link at point"))))))
+    (let ((bounds (funcall message-links-match-link-at-point-fn)))
+      (cond
+       (bounds
+        (goto-char (message-links--convert-link-from-bounds bounds)))
+       (t
+        (message "No link at point"))))))
 
 ;;;###autoload
 (defun message-links-convert-links-all ()
@@ -427,8 +427,8 @@ already present or added to the link list."
       (setq has-region t))
     (let ((count
            (message-links--with-range-limit
-            (message-links--convert-links-all-in-region
-             region-min region-max))))
+             (message-links--convert-links-all-in-region
+              region-min region-max))))
       (cond
        ((zerop count)
         (message "No links found in %s"
@@ -443,7 +443,7 @@ already present or added to the link list."
   "Re-number all links according to their appearance in the document."
   (interactive)
   (message-links--with-range-limit
-   (message-links--renumber-all-impl)))
+    (message-links--renumber-all-impl)))
 
 
 (provide 'message-links)
