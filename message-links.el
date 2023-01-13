@@ -407,7 +407,7 @@ already present or added to the link list."
     (message-links--add-link-impl link)))
 
 ;;;###autoload
-(defalias 'message-links-add 'message-links-add-link)
+(defalias 'message-links-add #'message-links-add-link)
 
 ;;;###autoload
 (defun message-links-convert-link-at-point ()
