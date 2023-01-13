@@ -112,8 +112,8 @@ While harmless, there is no need to wrap blocks of code multiple times."
 
 (defun message-links--add-link-impl (link)
   "Add LINK, leaving the point where the link reference ends."
-  (let ((short-link-index (number-to-string
-                           (1+ (message-links--get-max-footnote-link))))
+  (let ((short-link-index
+         (number-to-string (1+ (message-links--get-max-footnote-link))))
         (pos-init (point)))
 
     (cond
@@ -122,7 +122,9 @@ While harmless, there is no need to wrap blocks of code multiple times."
       (cond
        ((save-match-data
           (re-search-forward
-           (message-links--gen-link-header-search-regex) nil t))
+           (message-links--gen-link-header-search-regex)
+           nil
+           t))
         (message-links--goto-last-non-blank-eol))
        (t
         (message-links--goto-last-non-blank-eol)
@@ -134,13 +136,12 @@ While harmless, there is no need to wrap blocks of code multiple times."
       ;; When inserting the first link without an explicit header:
       ;; add a blank line separating links from non-link text
       ;; (not essential but reads better).
-      (when (string-equal (number-to-string message-links-index-start)
-                          short-link-index)
+      (when (string-equal
+             (number-to-string message-links-index-start)
+             short-link-index)
         (insert "\n"))))
 
-    (insert "\n"
-            (message-links--gen-footnotes-link short-link-index)
-            link)
+    (insert "\n" (message-links--gen-footnotes-link short-link-index) link)
 
     ;; Leave the cursor after the link text (as if the user had typed it in).
     (goto-char pos-init)
@@ -164,8 +165,9 @@ Return the number of links converted."
         (footnote-regex (message-links--footnote-link-regex)))
     (save-excursion
       (goto-char region-min)
-      (while (and (setq bounds (funcall message-links-match-link-forward-fn
-                                        region-max))
+      (while (and (setq bounds
+                        (funcall message-links-match-link-forward-fn
+                                 region-max))
                   ;; Ensure a misbehaving forward function never enters
                   ;; an eternal loop by scanning backwards.
                   (< pos-last (car bounds))
@@ -199,11 +201,12 @@ Return the maximum value if links can be found in the buffer.
 Else, return `message-links-index-start' minus 1."
   (let* ((footnote-links (message-links--extract-footnote-links))
          (footnotes-indexes
-          (mapcar (lambda (x)
-                    (save-match-data
-                      (and (string-match "\\([0-9]+\\)" x)
-                           (string-to-number (match-string 1 x)))))
-                  footnote-links)))
+          (mapcar
+           (lambda (x)
+             (save-match-data
+               (and (string-match "\\([0-9]+\\)" x)
+                    (string-to-number (match-string 1 x)))))
+           footnote-links)))
     (cond
      (footnotes-indexes
       (apply #'max footnotes-indexes))
@@ -275,15 +278,18 @@ To be inserted in the body text."
           (goto-char (point-min))
           (when message-links-link-header
             (when (re-search-forward
-                   (message-links--gen-link-header-search-regex) nil t)
+                   (message-links--gen-link-header-search-regex)
+                   nil
+                   t)
               (setq footnote-beg (line-beginning-position))))
           (while (re-search-forward regex nil t)
             (when (null footnote-beg)
               (setq footnote-beg (line-beginning-position)))
             (let ((beg (match-beginning 1))
                   (end (match-end 1)))
-              (let ((key (string-to-number
-                          (buffer-substring-no-properties beg end)))
+              (let ((key
+                     (string-to-number
+                      (buffer-substring-no-properties beg end)))
                     (val (cons beg end)))
                 (puthash key val footnote-map))))
           ;; Set to avoid errors (no footnotes were found).
@@ -308,7 +314,8 @@ To be inserted in the body text."
                  (lnk-key
                   (string-to-number
                    (buffer-substring-no-properties
-                    (car lnk-bounds) (cdr lnk-bounds)))))
+                    (car lnk-bounds)
+                    (cdr lnk-bounds)))))
             (unless (eq index lnk-key)
               (let ((def-bounds (gethash lnk-key footnote-map)))
                 (cond
@@ -323,9 +330,8 @@ To be inserted in the body text."
 
         ;; Sort and apply edit-list from last to first
         ;; (so number-width doesn't invalidate bounds).
-        (setq edit-list (sort edit-list
-                              (lambda (a b) (> (car (car a))
-                                               (car (car b))))))
+        (setq edit-list
+              (sort edit-list (lambda (a b) (> (car (car a)) (car (car b))))))
         (while edit-list
           (let ((edit (pop edit-list)))
             (let ((bounds (car edit))
@@ -346,8 +352,9 @@ To be inserted in the body text."
             (while (re-search-forward regex nil t)
               (let* ((beg (match-beginning 1))
                      (end (match-end 1))
-                     (key (string-to-number
-                           (buffer-substring-no-properties beg end)))
+                     (key
+                      (string-to-number
+                       (buffer-substring-no-properties beg end)))
                      (bol (line-beginning-position))
                      (eol (line-end-position))
                      (line-text (buffer-substring-no-properties bol eol)))
@@ -355,9 +362,10 @@ To be inserted in the body text."
                 (puthash key line-text line-text-from-number)))))
 
         ;; Sort by their location in the buffer.
-        (setq footnote-bounds-list (sort footnote-bounds-list
-                                         (lambda (a b) (> (car (car a))
-                                                          (car (car b))))))
+        (setq footnote-bounds-list
+              (sort
+               footnote-bounds-list
+               (lambda (a b) (> (car (car a)) (car (car b))))))
         (let ((index (1- count-index)))
           (while footnote-bounds-list
             (pcase-let ((`((,beg . ,end) . ,key) (pop footnote-bounds-list)))
@@ -382,9 +390,10 @@ To be inserted in the body text."
             (t
              (format ", (%d link(s) missing)" count-missing-links)))))
       (message "Renumber: %s"
-               (concat report-edits-made
-                       report-links-found
-                       report-links-missing)))))
+               (concat
+                report-edits-made
+                report-links-found
+                report-links-missing)))))
 
 ;;; Public Functions (Auto-Loaded).
 
@@ -428,15 +437,20 @@ already present or added to the link list."
     (let ((count
            (message-links--with-range-limit
              (message-links--convert-links-all-in-region
-              region-min region-max))))
+              region-min
+              region-max))))
       (cond
        ((zerop count)
         (message "No links found in %s"
-                 (if has-region "region" "buffer")))
+                 (if has-region
+                     "region"
+                   "buffer")))
        (t
         (message "Added %d link(s) in %s"
                  count
-                 (if has-region "region" "buffer")))))))
+                 (if has-region
+                     "region"
+                   "buffer")))))))
 
 ;;;###autoload
 (defun message-links-renumber-all ()
