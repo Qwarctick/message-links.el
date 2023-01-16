@@ -121,10 +121,8 @@ While harmless, there is no need to wrap blocks of code multiple times."
       ;; Ensure message-links-link-header present in the message (when non-nil).
       (cond
        ((save-match-data
-          (re-search-forward
-           (message-links--gen-link-header-search-regex)
-           nil
-           t))
+          (re-search-forward (message-links--gen-link-header-search-regex)
+                             nil t))
         (message-links--goto-last-non-blank-eol))
        (t
         (message-links--goto-last-non-blank-eol)
@@ -137,8 +135,7 @@ While harmless, there is no need to wrap blocks of code multiple times."
       ;; add a blank line separating links from non-link text
       ;; (not essential but reads better).
       (when (string-equal
-             (number-to-string message-links-index-start)
-             short-link-index)
+             (number-to-string message-links-index-start) short-link-index)
         (insert "\n"))))
 
     (insert "\n" (message-links--gen-footnotes-link short-link-index) link)
@@ -242,16 +239,12 @@ To be inserted at the bottom (footnote) of the buffer."
   "Generate the in-line link text from INDEX.
 To be inserted in the body text."
   (concat
-   (car message-links-sep-text-link)
-   index
-   (cdr message-links-sep-text-link)))
+   (car message-links-sep-text-link) index (cdr message-links-sep-text-link)))
 
 (defun message-links--gen-link-header-search-regex ()
   "Generate the regex used to search for the header."
   (concat
-   "^[[:blank:]]*"
-   (regexp-quote message-links-link-header)
-   "[[:blank:]]*$"))
+   "^[[:blank:]]*" (regexp-quote message-links-link-header) "[[:blank:]]*$"))
 
 (defun message-links--renumber-all-impl ()
   "Re-number all links according to their appearance in the document."
@@ -279,8 +272,7 @@ To be inserted in the body text."
           (when message-links-link-header
             (when (re-search-forward
                    (message-links--gen-link-header-search-regex)
-                   nil
-                   t)
+                   nil t)
               (setq footnote-beg (line-beginning-position))))
           (while (re-search-forward regex nil t)
             (when (null footnote-beg)
@@ -314,8 +306,7 @@ To be inserted in the body text."
                  (lnk-key
                   (string-to-number
                    (buffer-substring-no-properties
-                    (car lnk-bounds)
-                    (cdr lnk-bounds)))))
+                    (car lnk-bounds) (cdr lnk-bounds)))))
             (unless (eq index lnk-key)
               (let ((def-bounds (gethash lnk-key footnote-map)))
                 (cond
@@ -391,9 +382,7 @@ To be inserted in the body text."
              (format ", (%d link(s) missing)" count-missing-links)))))
       (message "Renumber: %s"
                (concat
-                report-edits-made
-                report-links-found
-                report-links-missing)))))
+                report-edits-made report-links-found report-links-missing)))))
 
 ;;; Public Functions (Auto-Loaded).
 
@@ -437,8 +426,7 @@ already present or added to the link list."
     (let ((count
            (message-links--with-range-limit
              (message-links--convert-links-all-in-region
-              region-min
-              region-max))))
+              region-min region-max))))
       (cond
        ((zerop count)
         (message "No links found in %s"
