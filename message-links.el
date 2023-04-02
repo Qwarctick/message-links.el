@@ -25,7 +25,7 @@
   "Manage reference links into text."
   :group 'message)
 
-(defcustom message-links-link-header "---links---"
+(defcustom message-links-link-header "--- links ---"
   "Header used to separate links from the original text.
 If set to nil, no header will be used."
   :type '(choice (const nil) string))
@@ -40,7 +40,7 @@ If set to nil, no header will be used."
 Use the link header to separate original text from links."
   :type 'boolean)
 
-(defcustom message-links-sep-footnotes-link '("[" . "] : ")
+(defcustom message-links-sep-footnotes-link '("[" . "]: ")
   "The text to use for links in the footnotes.
 If the default is used, links in footnotes looks like '[1] : '."
   :type '(cons string string))

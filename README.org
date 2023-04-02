@@ -36,8 +36,8 @@ This could be transformed into:
 
   Cheers
 
-  ---links---
-  [1] : https://my-file-server.org/Y5yu9Z1+3K83NFyPRy0siDw583mc+4iEljFmkUdgIIJuE5OAZTyhV00rXSMu/LP6z/o8HoD8hnXVIg2bwkddXw==
+  --- links ---
+  [1]: https://my-file-server.org/Y5yu9Z1+3K83NFyPRy0siDw583mc+4iEljFmkUdgIIJuE5OAZTyhV00rXSMu/LP6z/o8HoD8hnXVIg2bwkddXw==
 #+END_SRC
 
 This mode allow the generation of the references in the text as follow:
@@ -77,14 +77,14 @@ Then press =C-c l= when composing a message to add a link.
 
 ** Customization
 
-- =message-links-link-header=: Default =---links---= ::
+- =message-links-link-header=: Default =--- links ---= ::
   Header use to separate links and the original text. If set to =nil=, disable the header.
 
 - =message-links-index-start=: Default =1= ::
   Start index of links. So by default the first link will be =[1]=.
 
-- =message-links-sep-footnotes-link=: Default =("[" . "] : ")= ::
-  The text to use for links in the bottom of the buffer. Default, links look like =[1] : link text=.
+- =message-links-sep-footnotes-link=: Default =("[" . "]: ")= ::
+  The text to use for links in the bottom of the buffer. Default, links look like =[1]: link text=.
 
   Customize with =(setq message-links-sep-footnotes-link '("{^" . "}: "))=
   and links in footnote will look like ={^1}: link text=
@@ -130,9 +130,9 @@ By default:
   > blablabla
   > bla
 
-  ---links---
-  [1] : foo.org
-  [2] : bar.org
+  --- links ---
+  [1]: foo.org
+  [2]: bar.org
 #+END_SRC
 
 In fact, you want to add links just before the reply by tweaking =message-links-limit-range-fn=:
@@ -158,9 +158,9 @@ In fact, you want to add links just before the reply by tweaking =message-links-
 
   Blabla [1], babla [2].
 
-  ---links---
-  [1] : foo.org
-  [2] : bar.org
+  --- links ---
+  [1]: foo.org
+  [2]: bar.org
 
   > On Thu, 1 Sep 2022, Toto wrote:
   > blablabla

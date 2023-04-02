@@ -81,8 +81,8 @@
    (list
     "Link to [1] page.\n"
     "\n"
-    "---links---\n"
-    "[1] : https://www.gnu.org\n")))
+    "--- links ---\n"
+    "[1]: https://www.gnu.org\n")))
 
 (ert-deftest link-single-no-header ()
   "Convert a single link (without a header)."
@@ -93,7 +93,7 @@
      (list
       "Link to [1] page.\n"
       "\n"
-      "[1] : https://www.gnu.org\n"))))
+      "[1]: https://www.gnu.org\n"))))
 
 (ert-deftest link-multi ()
   "Converts multiple links at once."
@@ -109,11 +109,11 @@
     "Another link to WIKIPEDIA: [2] page.\n"
     "Two links on the same [3] line [4]\n"
     "\n"
-    "---links---\n"
-    "[1] : https://www.gnu.org\n"
-    "[2] : https://en.wikipedia.org\n"
-    "[3] : https://www.test.org\n"
-    "[4] : https://www.site.org/\n")))
+    "--- links ---\n"
+    "[1]: https://www.gnu.org\n"
+    "[2]: https://en.wikipedia.org\n"
+    "[3]: https://www.test.org\n"
+    "[4]: https://www.site.org/\n")))
 
 (ert-deftest link-with-indented-header ()
   "Convert with an indented link header (to ensure it's supported)."
@@ -122,14 +122,14 @@
      (list
       "Link to [1] page, another link to https://www.test.org page.\n"
       "\n"
-      "    ---links---\n"
-      "[1] : https://www.gnu.org\n")
+      "    --- links ---\n"
+      "[1]: https://www.gnu.org\n")
      (list
       "Link to [1] page, another link to [2] page.\n"
       "\n"
-      "    ---links---\n"
-      "[1] : https://www.gnu.org\n"
-      "[2] : https://www.test.org\n"))))
+      "    --- links ---\n"
+      "[1]: https://www.gnu.org\n"
+      "[2]: https://www.test.org\n"))))
 
 (ert-deftest link-with-limit-range ()
   "Convert with a limited range (using commit-message like formatting)."
@@ -165,9 +165,9 @@
       "\n"
       "Link to [1] page, another link to [2] page.\n"
       "\n"
-      "---links---\n"
-      "[1] : https://www.gnu.org\n"
-      "[2] : https://www.test.org\n"
+      "--- links ---\n"
+      "[1]: https://www.gnu.org\n"
+      "[2]: https://www.test.org\n"
       "\n"
       "# Ignore lines after this.\n"
       "#\n"
@@ -179,8 +179,8 @@
 (ert-deftest renumber-nop-single ()
   "Renumber simple (no work is needed)."
   (message-links-test--renumber-all-links-from-before-after
-    (list "Link to [1] page.\n" "\n" "[1] : https://www.gnu.org\n")
-    (list "Link to [1] page.\n" "\n" "[1] : https://www.gnu.org\n")))
+    (list "Link to [1] page.\n" "\n" "[1]: https://www.gnu.org\n")
+    (list "Link to [1] page.\n" "\n" "[1]: https://www.gnu.org\n")))
 
 (ert-deftest renumber-nop-complex ()
   "Renumber complex (no work is needed)."
@@ -191,28 +191,28 @@
      "Another link to WIKIPEDIA: [2] page.\n"
      "Two links on the same [3] line [4]\n"
      "\n"
-     "---links---\n"
-     "[1] : https://www.gnu.org\n"
-     "[2] : https://en.wikipedia.org\n"
-     "[3] : https://www.test.org\n"
-     "[4] : https://www.site.org/\n")
+     "--- links ---\n"
+     "[1]: https://www.gnu.org\n"
+     "[2]: https://en.wikipedia.org\n"
+     "[3]: https://www.test.org\n"
+     "[4]: https://www.site.org/\n")
     (list
      "Link to [1] page.\n"
      "\n"
      "Another link to WIKIPEDIA: [2] page.\n"
      "Two links on the same [3] line [4]\n"
      "\n"
-     "---links---\n"
-     "[1] : https://www.gnu.org\n"
-     "[2] : https://en.wikipedia.org\n"
-     "[3] : https://www.test.org\n"
-     "[4] : https://www.site.org/\n")))
+     "--- links ---\n"
+     "[1]: https://www.gnu.org\n"
+     "[2]: https://en.wikipedia.org\n"
+     "[3]: https://www.test.org\n"
+     "[4]: https://www.site.org/\n")))
 
 (ert-deftest renumber-single ()
   "Renumber a single link."
   (message-links-test--renumber-all-links-from-before-after
-    (list "Link to [123] page.\n" "\n" "[123] : https://www.gnu.org\n")
-    (list "Link to [1] page.\n" "\n" "[1] : https://www.gnu.org\n")))
+    (list "Link to [123] page.\n" "\n" "[123]: https://www.gnu.org\n")
+    (list "Link to [1] page.\n" "\n" "[1]: https://www.gnu.org\n")))
 
 (ert-deftest renumber-complex ()
   "Renumber more complex links."
@@ -223,22 +223,22 @@
      "Another link to WIKIPEDIA: [0] page.\n"
      "Two links on the same [16777216] line [4]\n"
      "\n"
-     "---links---\n"
-     "[65535] : https://www.gnu.org\n"
-     "[0] : https://en.wikipedia.org\n"
-     "[16777216] : https://www.test.org\n"
-     "[4] : https://www.site.org/\n")
+     "--- links ---\n"
+     "[65535]: https://www.gnu.org\n"
+     "[0]: https://en.wikipedia.org\n"
+     "[16777216]: https://www.test.org\n"
+     "[4]: https://www.site.org/\n")
     (list
      "Link to [1] page.\n"
      "\n"
      "Another link to WIKIPEDIA: [2] page.\n"
      "Two links on the same [3] line [4]\n"
      "\n"
-     "---links---\n"
-     "[1] : https://www.gnu.org\n"
-     "[2] : https://en.wikipedia.org\n"
-     "[3] : https://www.test.org\n"
-     "[4] : https://www.site.org/\n")))
+     "--- links ---\n"
+     "[1]: https://www.gnu.org\n"
+     "[2]: https://en.wikipedia.org\n"
+     "[3]: https://www.test.org\n"
+     "[4]: https://www.site.org/\n")))
 
 (ert-deftest renumber-complex-no-header ()
   "Renumber more complex links (without a header)."
@@ -250,20 +250,20 @@
        "Another link to WIKIPEDIA: [0] page.\n"
        "Two links on the same [16777216] line [4]\n"
        "\n"
-       "[65535] : https://www.gnu.org\n"
-       "[0] : https://en.wikipedia.org\n"
-       "[16777216] : https://www.test.org\n"
-       "[4] : https://www.site.org/\n")
+       "[65535]: https://www.gnu.org\n"
+       "[0]: https://en.wikipedia.org\n"
+       "[16777216]: https://www.test.org\n"
+       "[4]: https://www.site.org/\n")
       (list
        "Link to [1] page.\n"
        "\n"
        "Another link to WIKIPEDIA: [2] page.\n"
        "Two links on the same [3] line [4]\n"
        "\n"
-       "[1] : https://www.gnu.org\n"
-       "[2] : https://en.wikipedia.org\n"
-       "[3] : https://www.test.org\n"
-       "[4] : https://www.site.org/\n"))))
+       "[1]: https://www.gnu.org\n"
+       "[2]: https://en.wikipedia.org\n"
+       "[3]: https://www.test.org\n"
+       "[4]: https://www.site.org/\n"))))
 
 (ert-deftest renumber-complex-and-sort ()
   "Renumber a complex links that require sorting."
@@ -274,22 +274,22 @@
      "Another link to WIKIPEDIA: [0] page.\n"
      "Two links on the same [16777216] line [4]\n"
      "\n"
-     "---links---\n"
-     "[4] : https://www.site.org/\n"
-     "[16777216] : https://www.test.org\n"
-     "[0] : https://en.wikipedia.org\n"
-     "[65535] : https://www.gnu.org\n")
+     "--- links ---\n"
+     "[4]: https://www.site.org/\n"
+     "[16777216]: https://www.test.org\n"
+     "[0]: https://en.wikipedia.org\n"
+     "[65535]: https://www.gnu.org\n")
     (list
      "Link to [1] page.\n"
      "\n"
      "Another link to WIKIPEDIA: [2] page.\n"
      "Two links on the same [3] line [4]\n"
      "\n"
-     "---links---\n"
-     "[1] : https://www.gnu.org\n"
-     "[2] : https://en.wikipedia.org\n"
-     "[3] : https://www.test.org\n"
-     "[4] : https://www.site.org/\n")))
+     "--- links ---\n"
+     "[1]: https://www.gnu.org\n"
+     "[2]: https://en.wikipedia.org\n"
+     "[3]: https://www.test.org\n"
+     "[4]: https://www.site.org/\n")))
 
 (ert-deftest renumber-complex-and-sort-fragmented ()
   "Renumber a complex links & sort, with contents between links."
@@ -300,32 +300,32 @@
      "Another link to WIKIPEDIA: [0] page.\n"
      "Two links on the same [16777216] line [4]\n"
      "\n"
-     "---links---\n"
-     "[4] : https://www.site.org/\n"
+     "--- links ---\n"
+     "[4]: https://www.site.org/\n"
      "\n"
-     "[16777216] : https://www.test.org\n"
+     "[16777216]: https://www.test.org\n"
      "Some text\n"
-     "[0] : https://en.wikipedia.org\n"
+     "[0]: https://en.wikipedia.org\n"
      "Some more text\n"
      "\n"
      "\n"
-     "[65535] : https://www.gnu.org\n")
+     "[65535]: https://www.gnu.org\n")
     (list
      "Link to [1] page.\n"
      "\n"
      "Another link to WIKIPEDIA: [2] page.\n"
      "Two links on the same [3] line [4]\n"
      "\n"
-     "---links---\n"
-     "[1] : https://www.gnu.org\n"
+     "--- links ---\n"
+     "[1]: https://www.gnu.org\n"
      "\n"
-     "[2] : https://en.wikipedia.org\n"
+     "[2]: https://en.wikipedia.org\n"
      "Some text\n"
-     "[3] : https://www.test.org\n"
+     "[3]: https://www.test.org\n"
      "Some more text\n"
      "\n"
      "\n"
-     "[4] : https://www.site.org/\n")))
+     "[4]: https://www.site.org/\n")))
 
 (provide 'message-links-test)
 ;;; message-links-test.el ends here
