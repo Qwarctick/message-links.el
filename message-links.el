@@ -169,7 +169,7 @@ Return the number of links converted."
                   ;; an eternal loop by scanning backwards.
                   (< pos-last (car bounds))
 
-                  ;; Finally check this link is not it's self
+                  ;; Finally check this link is not itself
                   ;; part of a referenced link.
                   (save-excursion
                     (goto-char (car bounds))
@@ -288,7 +288,7 @@ To be inserted in the body text."
           (unless footnote-beg
             (setq footnote-beg (point-max))))
 
-        ;; Scan the body text for for link-text.
+        ;; Scan the body text for link-text.
         ;; Search backwards so the list is constructed smallest to largest.
         (save-match-data
           (let ((regex (message-links--text-link-regex)))
@@ -373,7 +373,9 @@ To be inserted in the body text."
              "not required")
             (t
              (format "%d links" count-edits))))
-          (report-links-found (format " (%d link(s) found)" count-index))
+          (report-links-found
+           (format " (%d link(s) found)"
+                   (- count-index message-links-index-start)))
           (report-links-missing
            (cond
             ((zerop count-missing-links)
