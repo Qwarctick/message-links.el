@@ -14,15 +14,18 @@
 ;; Manage reference links.
 ;;
 
-;;; Usage
+;;; Usage:
 
-;; TODO.
+;; M-x message-links-add-link          - Add a new link.
+;; M-x message-links-convert-link-at-point - Convert URL at point to a reference.
+;; M-x message-links-convert-links-all - Convert all URLs in buffer/region.
+;; M-x message-links-renumber-all      - Re-number links sequentially.
 
 ;;; Code:
 
 
 (defgroup message-links nil
-  "Manage reference links into text."
+  "Manage reference links in text."
   :group 'message)
 
 (defcustom message-links-link-header "--- links ---"
@@ -40,28 +43,29 @@ If set to nil, no header will be used."
 Use the link header to separate original text from links."
   :type 'boolean)
 
+
 (defcustom message-links-sep-footnotes-link '("[" . "]: ")
   "The text to use for links in the footnotes.
-If the default is used, links in footnotes looks like '[1] : '."
+If the default is used, links in footnotes looks like `[1]: '."
   :type '(cons string string))
 
 (defcustom message-links-sep-text-link '("[" . "]")
   "The text to use for number link in the text.
-If the default is used, links in text looks like '[1]'"
+If the default is used, links in text looks like `[1]'."
   :type '(cons string string))
 
 (defcustom message-links-match-link-at-point-fn
-  'message-links-match-link-at-point-default
+  #'message-links-match-link-at-point-default
   "Function that matches a link at the point."
   :type 'function)
 
 (defcustom message-links-match-link-forward-fn
-  'message-links-match-link-forward-default
+  #'message-links-match-link-forward-default
   "Function that finds the next link, taking a single LIMIT argument."
   :type 'function)
 
-(defcustom message-links-limit-range-fn 'message-links-limit-range-default
-  "Return a cons cell with minimum & maximum range.
+(defcustom message-links-limit-range-fn #'message-links-limit-range-default
+  "Function to return a cons cell with minimum & maximum range.
 By default this returns ((point-min) . (point-max)).
 
 Use to limit the region considered for links and link creation.
@@ -78,7 +82,7 @@ show status which is ignored at the end of the commit message."
   (bounds-of-thing-at-point 'url))
 
 (defun message-links-match-link-forward-default (limit)
-  "Return the bounds of the link before LIMIT, scanning forwards as needed."
+  "Return the bounds of a link up to LIMIT, scanning forwards as needed."
   (let ((bounds nil))
     (save-excursion
       (while (and (null bounds) (< (point) limit))
@@ -97,12 +101,12 @@ show status which is ignored at the end of the commit message."
 
 (defmacro message-links--with-range-limit (&rest body)
   "Execute BODY with `message-links-limit-range-fn' applied.
-By convention only use in public, interactive functions because.
+By convention only use in public, interactive functions.
 While harmless, there is no need to wrap blocks of code multiple times."
   (declare (indent 0))
-  `(let ((global-range (funcall message-links-limit-range-fn)))
+  `(let ((limit-range (funcall message-links-limit-range-fn)))
      (save-restriction
-       (narrow-to-region (car global-range) (cdr global-range))
+       (narrow-to-region (car limit-range) (cdr limit-range))
        ,@body)))
 
 (defun message-links--goto-last-non-blank-eol ()
@@ -119,14 +123,13 @@ While harmless, there is no need to wrap blocks of code multiple times."
     (cond
      (message-links-link-header
       ;; Ensure message-links-link-header present in the message (when non-nil).
-      (cond
-       ((save-match-data
-          (re-search-forward (message-links--gen-link-header-search-regex)
-                             nil t))
-        (message-links--goto-last-non-blank-eol))
-       (t
-        (message-links--goto-last-non-blank-eol)
-        (insert "\n\n" message-links-link-header))))
+      (message-links--goto-last-non-blank-eol)
+      (unless (save-match-data
+                (save-excursion
+                  (re-search-backward
+                   (message-links--gen-link-header-search-regex)
+                   nil t)))
+        (insert "\n\n" message-links-link-header)))
      ;; No link header expected.
      (t
       (message-links--goto-last-non-blank-eol)
@@ -145,7 +148,7 @@ While harmless, there is no need to wrap blocks of code multiple times."
     (insert (message-links--gen-text-link short-link-index))))
 
 (defun message-links--convert-link-from-bounds (bounds)
-  "Add BOUNDS as a link."
+  "Convert text at BOUNDS to a footnote link."
   (let ((link (buffer-substring-no-properties (car bounds) (cdr bounds))))
     (delete-region (car bounds) (cdr bounds))
     (save-excursion
@@ -183,7 +186,7 @@ Return the number of links converted."
 
 (defun message-links--extract-footnote-links ()
   "Extract the footnotes links in the buffer.
-Return a list of string or nil"
+Return a list of strings or nil."
   (let ((footnote-links '()))
     (save-excursion
       (goto-char (point-min))
@@ -249,12 +252,12 @@ To be inserted in the body text."
 (defun message-links--renumber-all-impl ()
   "Re-number all links according to their appearance in the document."
   ;; The footnote map maps number as keys with the values (beg . end)
-  ;; positions in the buffers.
+  ;; positions in the buffer.
   (let ((footnote-map (make-hash-table :test 'eq))
         ;; A list of (beg . end) of each link-text.
         (link-bounds-list (list))
         ;; The line beginning position of the link-header
-        ;; else where the first footnote occurs.
+        ;; or where the first footnote occurs.
         ;; Use for search limiting to prevent footnote matches
         ;; also being used as link-text.
         (footnote-beg nil)
@@ -277,27 +280,24 @@ To be inserted in the body text."
           (while (re-search-forward regex nil t)
             (when (null footnote-beg)
               (setq footnote-beg (line-beginning-position)))
-            (let ((beg (match-beginning 1))
-                  (end (match-end 1)))
-              (let ((key
-                     (string-to-number
-                      (buffer-substring-no-properties beg end)))
-                    (val (cons beg end)))
-                (puthash key val footnote-map))))
+            (let* ((beg (match-beginning 1))
+                   (end (match-end 1))
+                   (key
+                    (string-to-number
+                     (buffer-substring-no-properties beg end))))
+              (puthash key (cons beg end) footnote-map)))
           ;; Set to avoid errors (no footnotes were found).
           (unless footnote-beg
             (setq footnote-beg (point-max))))
 
         ;; Scan the body text for link-text.
         ;; Search backwards so the list is constructed smallest to largest.
-        (save-match-data
-          (let ((regex (message-links--text-link-regex)))
-            (goto-char footnote-beg)
-            (while (re-search-backward regex nil t)
-              (let ((beg (match-beginning 1))
-                    (end (match-end 1)))
-                (let ((val (cons beg end)))
-                  (push val link-bounds-list)))))))
+        (let ((regex (message-links--text-link-regex)))
+          (goto-char footnote-beg)
+          (while (re-search-backward regex nil t)
+            (let ((beg (match-beginning 1))
+                  (end (match-end 1)))
+              (push (cons beg end) link-bounds-list)))))
 
       (let ((index message-links-index-start)
             (edit-list (list)))
@@ -354,9 +354,8 @@ To be inserted in the body text."
 
         ;; Sort by their location in the buffer.
         (setq footnote-bounds-list
-              (sort
-               footnote-bounds-list
-               (lambda (a b) (> (car (car a)) (car (car b))))))
+              (sort footnote-bounds-list
+                    (lambda (a b) (> (car (car a)) (car (car b))))))
         (let ((index (1- count-index)))
           (while footnote-bounds-list
             (pcase-let ((`((,beg . ,end) . ,key) (pop footnote-bounds-list)))
@@ -386,6 +385,15 @@ To be inserted in the body text."
                (concat
                 report-edits-made report-links-found report-links-missing)))))
 
+(defun message-links--convert-links-all-impl (beg end bounds-description)
+  "Convert all links between BEG and END, reporting with BOUNDS-DESCRIPTION."
+  (let ((count (message-links--convert-links-all-in-region beg end)))
+    (cond
+     ((zerop count)
+      (message "No links found in %s" bounds-description))
+     (t
+      (message "Added %d link(s) in %s" count bounds-description)))))
+
 ;;; Public Functions (Auto-Loaded).
 
 ;;;###autoload
@@ -397,8 +405,7 @@ already present or added to the link list."
   (message-links--with-range-limit
     (message-links--add-link-impl link)))
 
-;;;###autoload
-(defalias 'message-links-add #'message-links-add-link)
+;;;###autoload (defalias 'message-links-add #'message-links-add-link)
 
 ;;;###autoload
 (defun message-links-convert-link-at-point ()
@@ -416,31 +423,14 @@ already present or added to the link list."
 (defun message-links-convert-links-all ()
   "Convert all links in the buffer (or active-region) to footnotes."
   (interactive)
-  (let ((region-min (point-min))
-        (region-max (point-max))
-        (has-region nil))
-
-    ;; Isolate to a region when found.
-    (when (region-active-p)
-      (setq region-min (region-beginning))
-      (setq region-max (region-end))
-      (setq has-region t))
-    (let ((count
-           (message-links--with-range-limit
-             (message-links--convert-links-all-in-region
-              region-min region-max))))
-      (cond
-       ((zerop count)
-        (message "No links found in %s"
-                 (if has-region
-                     "region"
-                   "buffer")))
-       (t
-        (message "Added %d link(s) in %s"
-                 count
-                 (if has-region
-                     "region"
-                   "buffer")))))))
+  (message-links--with-range-limit
+    (cond
+     ((region-active-p)
+      (message-links--convert-links-all-impl
+       (region-beginning) (region-end) "region"))
+     (t
+      (message-links--convert-links-all-impl
+       (point-min) (point-max) "buffer")))))
 
 ;;;###autoload
 (defun message-links-renumber-all ()

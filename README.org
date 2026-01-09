@@ -1,4 +1,3 @@
-
 * message-links.el
 
 Emacs library to add reference links in message-mode without html.
@@ -7,6 +6,7 @@ Emacs library to add reference links in message-mode without html.
 
 - [[#what-it-does][What it does]]
 - [[#how-to-use][How to use]]
+- [[#commands][Commands]]
 - [[#customization][Customization]]
 - [[#faq][FAQ]]
 
@@ -40,7 +40,7 @@ This could be transformed into:
   [1]: https://my-file-server.org/Y5yu9Z1+3K83NFyPRy0siDw583mc+4iEljFmkUdgIIJuE5OAZTyhV00rXSMu/LP6z/o8HoD8hnXVIg2bwkddXw==
 #+END_SRC
 
-This mode allow the generation of the references in the text as follow:
+This mode allows the generation of references in the text as follows:
 
 [[./doc/message-links-demo.gif]]
 
@@ -58,27 +58,25 @@ Then press =C-c l= when composing a message to add a link.
 ** Commands
 
 - =message-links-add-link= ::
-
   Enter a new link.
 
 - =message-links-convert-link-at-point= ::
-
-  Match a link at the cursor location, and convert it to a referenced link.
-  (this uses =message-links-match-link-at-point-fn= to identify links).
+  Match a link at the cursor location, and convert it to a referenced link
+  (uses =message-links-match-link-at-point-functions= to identify links).
 
 - =message-links-convert-links-all= ::
   Convert all links to references in the buffer or active region
-  (using =message-links-match-link-forward-fn= to scan for links).
+  (uses =message-links-match-link-forward-fn= to scan for links).
 
 - =message-links-renumber-all= ::
   Re-number all links starting from =message-links-index-start=,
-  putting the footnotes in order if necessary. This can be useful when editing paragraphs that contain links which may
-  become un-ordered.
+  putting the footnotes in order if necessary.
+  Useful when editing paragraphs that contain links which may become un-ordered.
 
 ** Customization
 
 - =message-links-link-header=: Default =--- links ---= ::
-  Header use to separate links and the original text. If set to =nil=, disable the header.
+  Header used to separate links from the original text. If set to =nil=, disables the header.
 
 - =message-links-index-start=: Default =1= ::
   Start index of links. So by default the first link will be =[1]=.
@@ -95,14 +93,22 @@ Then press =C-c l= when composing a message to add a link.
   Customize with =(setq message-links-sep-text-link '("{^" . "}"))= and links in text
   will look like =blablabla {^1} blablabla=.
 
-- =message-links-match-link-at-point-fn=: Defaults to using =thing-at-pt= (url) ::
-   Return the bounds of the link at the point as a cons cell or nil.
+- =message-links-match-link-at-point-functions= ::
+  List of functions to match a link at point.
+  Each function is called with no arguments until one returns non-nil (a cons cell of bounds).
 
-- =message-links-match-link-forward-fn=: Default =message-links-match-link-at-point-default= ::
+  Defaults to:
+  - =message-links-match-link-at-point-url= :: Match URLs using =thing-at-point=.
+  - =message-links-match-link-at-point-sha1= :: Match Git SHA1 hashes (hexadecimal strings).
+
+- =message-links-match-sha1-min-length=: Default =8= ::
+  Minimum length for SHA1 hash matching.
+
+- =message-links-match-link-forward-fn=: Default =message-links-match-link-forward-default= ::
   Takes a single limit argument (representing a buffer position not to seek past),
   returns the bounds of the next link or nil when none are found.
 
-  The default callback steps over white-space for the next =message-links-match-link-at-point-fn=.
+  The default callback steps over white-space for the next =message-links-match-link-at-point-functions=.
 
 - =message-links-limit-range-fn=: Defaults to returning =((point-min) . (point-max))= ::
   Use this to limit the range used for scanning and link insertion.
@@ -111,14 +117,15 @@ Then press =C-c l= when composing a message to add a link.
   Often it's preferable to add the links before these comments. For example, see ([[#faq][FAQ]]).
 
 
-* FAQ
+** FAQ
 
-** I don't want to put the links at the bottom of the buffer
+*** I don't want to put the links at the bottom of the buffer
 
-If you work in a GIT/SVN message commit or a message with a lot of reply,
+If you work in a Git/SVN commit message or a message with replies,
 you want your links at the bottom of your message and not the bottom of the buffer.
-Use =message-links-limit-range-fn= for this purpose:
-By default:
+Use =message-links-limit-range-fn= for this purpose.
+
+By default, the links appear after the quoted reply:
 
 
 #+BEGIN_SRC text
