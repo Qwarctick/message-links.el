@@ -54,10 +54,16 @@ If the default is used, links in footnotes looks like `[1]: '."
 If the default is used, links in text looks like `[1]'."
   :type '(cons string string))
 
-(defcustom message-links-match-link-at-point-fn
-  #'message-links-match-link-at-point-default
-  "Function that matches a link at the point."
-  :type 'function)
+(defcustom message-links-match-link-at-point-functions
+  '(message-links-match-link-at-point-url
+    message-links-match-link-at-point-sha1)
+  "List of functions to match a link at point.
+Each function is called with no arguments until one returns non-nil."
+  :type '(repeat function))
+
+(defcustom message-links-match-sha1-min-length 8
+  "Minimum length for SHA1 hash matching."
+  :type 'integer)
 
 (defcustom message-links-match-link-forward-fn
   #'message-links-match-link-forward-default
@@ -77,16 +83,24 @@ show status which is ignored at the end of the commit message."
 
 (require 'thingatpt)
 
-(defun message-links-match-link-at-point-default ()
-  "Return the bounds of the link at point."
+(defun message-links-match-link-at-point-url ()
+  "Return the bounds of the URL at point."
   (bounds-of-thing-at-point 'url))
+
+(defun message-links-match-link-at-point-sha1 ()
+  "Return the bounds of a Git SHA1 hash at point.
+Matches hexadecimal strings of at least `message-links-match-sha1-min-length' characters."
+  (when (thing-at-point-looking-at
+         (format "\\b[0-9a-fA-F]\\{%d,\\}\\b"
+                 message-links-match-sha1-min-length))
+    (cons (match-beginning 0) (match-end 0))))
 
 (defun message-links-match-link-forward-default (limit)
   "Return the bounds of a link up to LIMIT, scanning forwards as needed."
   (let ((bounds nil))
     (save-excursion
       (while (and (null bounds) (< (point) limit))
-        (unless (setq bounds (funcall message-links-match-link-at-point-fn))
+        (unless (setq bounds (message-links--match-link-at-point))
           ;; No match, skip over non-blank, then blank space to the next
           ;; possible candidate for a URL.
           (skip-chars-forward "^[:blank:]\n" limit)
@@ -98,6 +112,11 @@ show status which is ignored at the end of the commit message."
   (cons (point-min) (point-max)))
 
 ;;; Private Implementations.
+
+(defun message-links--match-link-at-point ()
+  "Run `message-links-match-link-at-point-functions' until one returns non-nil."
+  (run-hook-with-args-until-success
+   'message-links-match-link-at-point-functions))
 
 (defmacro message-links--with-range-limit (&rest body)
   "Execute BODY with `message-links-limit-range-fn' applied.
@@ -412,7 +431,7 @@ already present or added to the link list."
   "Convert the link at the cursor to a footnote link."
   (interactive)
   (message-links--with-range-limit
-    (let ((bounds (funcall message-links-match-link-at-point-fn)))
+    (let ((bounds (message-links--match-link-at-point)))
       (cond
        (bounds
         (goto-char (message-links--convert-link-from-bounds bounds)))
