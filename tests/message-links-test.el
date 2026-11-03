@@ -85,6 +85,28 @@ Both are lists of strings."
       "\n"
       "[1]: https://www.gnu.org\n"))))
 
+(ert-deftest link-at-point-end-of-text ()
+  "Convert a link which is the last text in the buffer."
+  (with-temp-buffer
+    (insert "See https://www.gnu.org\n")
+    (goto-char 8)
+    (message-links-convert-link-at-point)
+    (should
+     (equal
+      (buffer-string)
+      "See [1]\n\n--- links ---\n[1]: https://www.gnu.org\n"))
+    (should (equal (point) 8))))
+
+(ert-deftest link-add-after-blank-lines ()
+  "Add a link with the cursor after trailing blank lines."
+  (with-temp-buffer
+    (insert "Hello\n\n")
+    (message-links-add-link "https://www.gnu.org")
+    (should
+     (equal
+      (buffer-string)
+      "Hello\n\n[1]\n\n--- links ---\n[1]: https://www.gnu.org"))))
+
 (ert-deftest link-multi ()
   "Converts multiple links at once."
   (message-links-test--convert-all-links-from-before-after
