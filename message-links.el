@@ -123,10 +123,11 @@ Matches hexadecimal strings of at least `message-links-match-sha1-min-length' ch
 By convention only use in public, interactive functions.
 While harmless, there is no need to wrap blocks of code multiple times."
   (declare (indent 0))
-  `(let ((limit-range (funcall message-links-limit-range-fn)))
-     (save-restriction
-       (narrow-to-region (car limit-range) (cdr limit-range))
-       ,@body)))
+  (let ((limit-range (make-symbol "limit-range")))
+    `(let ((,limit-range (funcall message-links-limit-range-fn)))
+       (save-restriction
+         (narrow-to-region (car ,limit-range) (cdr ,limit-range))
+         ,@body))))
 
 (defun message-links--goto-last-non-blank-eol ()
   "Move the cursor to the line ending of the last non-blank line."
