@@ -114,7 +114,7 @@ Matches hexadecimal strings of at least `message-links-match-sha1-min-length' ch
 ;;; Private Implementations.
 
 (defun message-links--match-link-at-point ()
-  "Run `message-links-match-link-at-point-functions' until one returns non-nil."
+  "Return the first match of `message-links-match-link-at-point-functions'."
   (run-hook-with-args-until-success
    'message-links-match-link-at-point-functions))
 
