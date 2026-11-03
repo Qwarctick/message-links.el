@@ -28,43 +28,33 @@
 
 ;;; Setup Environment
 
-(setq message-links-basedir (concat (file-name-directory load-file-name) ".."))
-(add-to-list 'load-path message-links-basedir)
+(add-to-list 'load-path (concat (file-name-directory load-file-name) ".."))
 (require 'message-links)
 
 ;;; Test Utilities
 
-(defun message-links-test--do-convert-all-links ()
-  "Run a test on the current buffer using CHAR-ODD & CHAR-EVEN."
-  (message-links-convert-links-all)
-  (buffer-substring-no-properties (point-min) (point-max)))
+(defun message-links-test--convert-all-links-from-before-after (before after)
+  "Insert BEFORE, convert all links and check the result matches AFTER.
+Both are lists of strings."
+  (with-temp-buffer
+    (apply #'insert before)
+    (message-links-convert-links-all)
+    (should
+     (equal
+      (apply #'concat after)
+      (buffer-substring-no-properties (point-min) (point-max))))))
 
-(defun message-links-test--do-renumber-all-links ()
-  "Run a test on the current buffer using CHAR-ODD & CHAR-EVEN."
-  (message-links-renumber-all)
-  (buffer-substring-no-properties (point-min) (point-max)))
-
-(defmacro message-links-test--convert-all-links-from-before-after (before after)
-  `(let ((buf (generate-new-buffer "message-links-test.txt")))
-     (let ((before-var ,before)
-           (after-var ,after))
-       (with-current-buffer buf
-         (apply 'insert before-var)
-         (let ((code-str-expect (apply 'concat after-var))
-               (code-str-result (message-links-test--do-convert-all-links)))
-           (should (equal code-str-expect code-str-result)))))))
-
-(defmacro message-links-test--renumber-all-links-from-before-after
-    (before after)
+(defun message-links-test--renumber-all-links-from-before-after (before after)
+  "Insert BEFORE, renumber all links and check the result matches AFTER.
+Both are lists of strings."
   (declare (indent 0))
-  `(let ((buf (generate-new-buffer "message-links-test.txt")))
-     (let ((before-var ,before)
-           (after-var ,after))
-       (with-current-buffer buf
-         (apply 'insert before-var)
-         (let ((code-str-expect (apply 'concat after-var))
-               (code-str-result (message-links-test--do-renumber-all-links)))
-           (should (equal code-str-expect code-str-result)))))))
+  (with-temp-buffer
+    (apply #'insert before)
+    (message-links-renumber-all)
+    (should
+     (equal
+      (apply #'concat after)
+      (buffer-substring-no-properties (point-min) (point-max))))))
 
 ;;; Tests: Convert All Links
 
