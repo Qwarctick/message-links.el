@@ -203,29 +203,18 @@ Return the number of links converted."
         (setq count (1+ count))))
     count))
 
-(defun message-links--extract-footnote-links ()
-  "Extract the footnotes links in the buffer.
-Return a list of strings or nil."
-  (let ((footnote-links '()))
-    (save-excursion
-      (goto-char (point-min))
-      (save-match-data
-        (while (re-search-forward (message-links--footnote-link-regex) nil t)
-          (push (match-string-no-properties 0) footnote-links))))
-    footnote-links))
-
 (defun message-links--get-max-footnote-link ()
   "Get the maximum index of the footnote links in the buffer.
 Return the maximum value if links can be found in the buffer.
 Else, return `message-links-index-start' minus 1."
-  (let* ((footnote-links (message-links--extract-footnote-links))
-         (footnotes-indexes
-          (mapcar
-           (lambda (x)
-             (save-match-data
-               (and (string-match "\\([0-9]+\\)" x)
-                    (string-to-number (match-string 1 x)))))
-           footnote-links)))
+  (let ((regex (message-links--footnote-link-regex))
+        (footnotes-indexes (list)))
+    (save-excursion
+      (goto-char (point-min))
+      (save-match-data
+        (while (re-search-forward regex nil t)
+          (push (string-to-number (match-string-no-properties 1))
+                footnotes-indexes))))
     (cond
      (footnotes-indexes
       (apply #'max footnotes-indexes))
