@@ -424,7 +424,8 @@ already present or added to the link list."
   (message-links--with-range-limit
     (message-links--add-link-impl link)))
 
-;;;###autoload (defalias 'message-links-add #'message-links-add-link)
+;;;###autoload
+(defalias 'message-links-add #'message-links-add-link)
 
 ;;;###autoload
 (defun message-links-convert-link-at-point ()
