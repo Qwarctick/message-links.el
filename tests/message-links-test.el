@@ -105,6 +105,17 @@ Both are lists of strings."
     "[3]: https://www.test.org\n"
     "[4]: https://www.site.org/\n")))
 
+(ert-deftest link-sha1-skip-numbers ()
+  "Convert SHA1 hashes but not plain numbers."
+  (message-links-test--convert-all-links-from-before-after
+   (list "Call 0612345678, fixed in 41c0c5e9.\n")
+   ;; format-next-line: off
+   (list
+    "Call 0612345678, fixed in [1].\n"
+    "\n"
+    "--- links ---\n"
+    "[1]: 41c0c5e9\n")))
+
 (ert-deftest link-with-indented-header ()
   "Convert with an indented link header (to ensure it's supported)."
   (let ((message-links-link-header nil))

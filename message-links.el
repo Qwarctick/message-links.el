@@ -89,10 +89,12 @@ show status which is ignored at the end of the commit message."
 
 (defun message-links-match-link-at-point-sha1 ()
   "Return the bounds of a Git SHA1 hash at point.
-Matches hexadecimal strings of at least `message-links-match-sha1-min-length' characters."
-  (when (thing-at-point-looking-at
-         (format "\\b[0-9a-fA-F]\\{%d,\\}\\b"
-                 message-links-match-sha1-min-length))
+Matches hexadecimal strings of at least `message-links-match-sha1-min-length'
+characters, containing at least one letter so plain numbers are skipped."
+  (when (and (thing-at-point-looking-at
+              (format "\\b[0-9a-fA-F]\\{%d,\\}\\b"
+                      message-links-match-sha1-min-length))
+             (string-match-p "[a-fA-F]" (match-string-no-properties 0)))
     (cons (match-beginning 0) (match-end 0))))
 
 (defun message-links-match-link-forward-default (limit)
