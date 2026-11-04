@@ -43,6 +43,8 @@ If set to nil, no header will be used."
 
 Use the link header to separate original text from links."
   :type 'boolean)
+(make-obsolete-variable
+ 'message-links-enable-link-header 'message-links-link-header "0.1")
 
 
 (defcustom message-links-sep-footnotes-link '("[" . "]: ")
