@@ -23,6 +23,7 @@
 
 ;;; Code:
 
+(require 'thingatpt)
 
 (defgroup message-links nil
   "Manage reference links in text."
@@ -80,8 +81,6 @@ show status which is ignored at the end of the commit message."
   :type 'function)
 
 ;;; Implementations of link matching functions.
-
-(require 'thingatpt)
 
 (defun message-links-match-link-at-point-url ()
   "Return the bounds of the URL at point."
