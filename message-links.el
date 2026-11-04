@@ -136,35 +136,35 @@ While harmless, there is no need to wrap blocks of code multiple times."
 (defun message-links--add-link-impl (link)
   "Add LINK, leaving the point where the link reference ends."
   (let ((short-link-index
-         (number-to-string (1+ (message-links--get-max-footnote-link))))
-        (pos-init (point)))
+         (number-to-string (1+ (message-links--get-max-footnote-link)))))
 
-    (cond
-     (message-links-link-header
-      ;; Ensure message-links-link-header present in the message (when non-nil).
-      (message-links--goto-last-non-blank-eol)
-      (unless (save-match-data
-                (save-excursion
-                  (re-search-backward
-                   (message-links--gen-link-header-search-regex)
-                   nil t)))
-        (insert "\n\n" message-links-link-header)))
-     ;; No link header expected.
-     (t
-      (message-links--goto-last-non-blank-eol)
-
-      ;; When inserting the first link without an explicit header:
-      ;; add a blank line separating links from non-link text
-      ;; (not essential but reads better).
-      (when (string-equal
-             (number-to-string message-links-index-start) short-link-index)
-        (insert "\n"))))
-
-    (insert "\n" (message-links--gen-footnotes-link short-link-index) link)
-
+    ;; Insert the link text first so the footnote always ends up after it.
     ;; Leave the cursor after the link text (as if the user had typed it in).
-    (goto-char pos-init)
-    (insert (message-links--gen-text-link short-link-index))))
+    (insert (message-links--gen-text-link short-link-index))
+
+    (save-excursion
+      (cond
+       (message-links-link-header
+        ;; Ensure message-links-link-header present in the message (when non-nil).
+        (message-links--goto-last-non-blank-eol)
+        (unless (save-match-data
+                  (save-excursion
+                    (re-search-backward
+                     (message-links--gen-link-header-search-regex)
+                     nil t)))
+          (insert "\n\n" message-links-link-header)))
+       ;; No link header expected.
+       (t
+        (message-links--goto-last-non-blank-eol)
+
+        ;; When inserting the first link without an explicit header:
+        ;; add a blank line separating links from non-link text
+        ;; (not essential but reads better).
+        (when (string-equal
+               (number-to-string message-links-index-start) short-link-index)
+          (insert "\n"))))
+
+      (insert "\n" (message-links--gen-footnotes-link short-link-index) link))))
 
 (defun message-links--convert-link-from-bounds (bounds)
   "Convert text at BOUNDS to a footnote link."
