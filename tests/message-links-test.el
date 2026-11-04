@@ -58,6 +58,10 @@ Both are lists of strings."
 
 ;;; Tests: Convert All Links
 
+(ert-deftest link-add-alias ()
+  "The alias used in the README is defined."
+  (should (fboundp 'message-links-add)))
+
 (ert-deftest link-nop ()
   "Do Nothing."
   (message-links-test--convert-all-links-from-before-after
