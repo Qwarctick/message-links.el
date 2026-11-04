@@ -196,7 +196,7 @@ Return the number of links converted."
                   (save-excursion
                     (goto-char (car bounds))
                     (beginning-of-line)
-                    (not (looking-at footnote-regex t))))
+                    (not (looking-at-p footnote-regex))))
         ;; Step to the end of the newly added link reference.
         (setq pos-last (message-links--convert-link-from-bounds bounds))
         (goto-char pos-last)
