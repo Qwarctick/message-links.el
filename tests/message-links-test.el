@@ -374,5 +374,51 @@ Both are lists of strings."
      "\n"
      "[4]: https://www.site.org/\n")))
 
+(ert-deftest renumber-duplicate-reference ()
+  "Renumber a link referenced more than once."
+  (message-links-test--renumber-all-links-from-before-after
+    (list
+     "See [2] and again [2], then [1].\n"
+     "\n"
+     "--- links ---\n"
+     "[1]: https://a.org\n"
+     "[2]: https://b.org\n")
+    (list
+     "See [1] and again [1], then [2].\n"
+     "\n"
+     "--- links ---\n"
+     "[1]: https://b.org\n"
+     "[2]: https://a.org\n")))
+
+(ert-deftest renumber-unreferenced-footnote ()
+  "Renumber with a footnote that isn't referenced, it goes last."
+  (message-links-test--renumber-all-links-from-before-after
+    (list
+     "Text [2].\n"
+     "\n"
+     "--- links ---\n"
+     "[1]: https://a.org\n"
+     "[2]: https://b.org\n")
+    (list
+     "Text [1].\n"
+     "\n"
+     "--- links ---\n"
+     "[1]: https://b.org\n"
+     "[2]: https://a.org\n")))
+
+(ert-deftest renumber-missing-link ()
+  "Renumber skipping bracketed numbers which aren't links."
+  (message-links-test--renumber-all-links-from-before-after
+    (list
+     "Use a[0] then [5].\n"
+     "\n"
+     "--- links ---\n"
+     "[5]: https://a.org\n")
+    (list
+     "Use a[0] then [1].\n"
+     "\n"
+     "--- links ---\n"
+     "[1]: https://a.org\n")))
+
 (provide 'message-links-test)
 ;;; message-links-test.el ends here
