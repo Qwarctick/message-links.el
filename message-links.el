@@ -181,12 +181,14 @@ Return the number of links converted."
   (let ((bounds nil)
         (count 0)
         (pos-last -1)
-        (footnote-regex (message-links--footnote-link-regex)))
+        (footnote-regex (message-links--footnote-link-regex))
+        ;; Converting links changes the text length, use a marker.
+        (limit (copy-marker region-max)))
     (save-excursion
       (goto-char region-min)
       (while (and (setq bounds
                         (funcall message-links-match-link-forward-fn
-                                 region-max))
+                                 (marker-position limit)))
                   ;; Ensure a misbehaving forward function never enters
                   ;; an eternal loop by scanning backwards.
                   (< pos-last (car bounds))
@@ -201,6 +203,7 @@ Return the number of links converted."
         (setq pos-last (message-links--convert-link-from-bounds bounds))
         (goto-char pos-last)
         (setq count (1+ count))))
+    (set-marker limit nil)
     count))
 
 (defun message-links--extract-footnote-links ()

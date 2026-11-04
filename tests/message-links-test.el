@@ -186,6 +186,26 @@ Both are lists of strings."
       "# Changes to be committed:\n"
       "# modified: some_file.txt\n"))))
 
+(ert-deftest link-region ()
+  "Only convert links in the active region."
+  (with-temp-buffer
+    (let ((transient-mark-mode t))
+      (insert
+       "A https://www.example.org/a/very/long/path x\n"
+       "B https://b.org\n")
+      (goto-char (point-min))
+      (push-mark (line-end-position) t t)
+      (message-links-convert-links-all)
+      (should
+       (equal
+        (buffer-string)
+        (concat
+         "A [1] x\n"
+         "B https://b.org\n"
+         "\n"
+         "--- links ---\n"
+         "[1]: https://www.example.org/a/very/long/path\n"))))))
+
 ;;; Tests: Renumber All
 
 (ert-deftest renumber-nop-single ()
